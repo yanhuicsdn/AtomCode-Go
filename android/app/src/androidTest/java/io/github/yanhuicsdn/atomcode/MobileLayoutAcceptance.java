@@ -32,6 +32,7 @@ final class MobileLayoutAcceptance {
     private String origin;
     private String entry;
     private String stage = "initialization";
+    private String observation;
     private int originalOrientation;
     private boolean capturedOrientation;
 
@@ -103,7 +104,8 @@ final class MobileLayoutAcceptance {
             host.pass("Workspace canary survives both rotations with unchanged runtime identity");
         } catch (Throwable error) {
             // No exception messages: they can contain URLs, document content or credentials.
-            failure = stage + "/" + error.getClass().getSimpleName();
+            failure = stage + "/" + error.getClass().getSimpleName()
+                    + (observation == null ? "" : " [" + observation + "]");
         } finally {
             try {
                 host.runOnMainSync(() -> {
@@ -127,12 +129,22 @@ final class MobileLayoutAcceptance {
     }
 
     private void assertSameRuntime() throws Exception {
-        LocalRuntimeSmoke.require(host.controller.phase == RuntimeController.Phase.RUNNING
-                && origin.equals(host.controller.origin()) && entry.equals(host.controller.entryUrl()),
+        String previousStage = stage;
+        stage = previousStage + "/runtime-identity";
+        boolean running = host.controller.phase == RuntimeController.Phase.RUNNING;
+        boolean sameOrigin = origin.equals(host.controller.origin());
+        boolean sameEntry = entry.equals(host.controller.entryUrl());
+        observation = "running=" + running + ", sameOrigin=" + sameOrigin + ", sameEntry=" + sameEntry;
+        LocalRuntimeSmoke.require(running && sameOrigin && sameEntry,
                 "rotation must not restart or replace the runtime");
+        stage = previousStage;
+        observation = null;
     }
 
     private void rotate(int request, int expectedConfiguration) throws Exception {
+        String previousStage = stage;
+        stage = previousStage + "/monitor";
+        observation = "replacement=false";
         Activity before = current;
         Instrumentation.ActivityMonitor monitor = host.addMonitor(MainActivity.class.getName(), null, false);
         try {
@@ -148,25 +160,41 @@ final class MobileLayoutAcceptance {
             }
             LocalRuntimeSmoke.require(replacement != null, "orientation must recreate MainActivity");
             current = replacement;
-            LocalRuntimeSmoke.require(current.getResources().getConfiguration().orientation == expectedConfiguration,
+            stage = previousStage + "/configuration";
+            int actualConfiguration = current.getResources().getConfiguration().orientation;
+            observation = "expected=" + expectedConfiguration + ", actual=" + actualConfiguration;
+            LocalRuntimeSmoke.require(actualConfiguration == expectedConfiguration,
                     "requested orientation must be applied");
+            stage = previousStage;
+            observation = null;
             pageReady(current);
         } finally { host.removeMonitor(monitor); }
     }
 
     private void pageReady(Activity activity) throws Exception {
+        String previousStage = stage;
+        stage = previousStage + "/page-render";
+        observation = null;
         long deadline = SystemClock.elapsedRealtime() + 30000;
         boolean ready = false;
         do {
             JSONObject page = evaluate(activity, "(()=>{document.querySelector('.model-config-modal .modal-close')?.click();"
-                    + "const e=document.querySelector('textarea');if(!e)return {ready:false};"
+                    + "const e=document.querySelector('textarea');const p={dom:document.readyState==='complete',"
+                    + "sameOrigin:location.origin===" + JSONObject.quote(origin)
+                    + ",tokenFree:!location.search.includes('token='),composer:!!e};if(!e)return p;"
                     + "e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();"
-                    + "return {ready:document.readyState==='complete'&&location.origin===" + JSONObject.quote(origin)
-                    + "&&!location.search.includes('token=')&&r.width>20&&r.height>20&&r.top>=-2&&r.bottom<=innerHeight+2}})()");
+                    + "p.top=Math.round(r.top);p.bottom=Math.round(r.bottom);p.viewport=Math.round(innerHeight);"
+                    + "p.ready=p.dom&&p.sameOrigin&&p.tokenFree&&r.width>20&&r.height>20&&r.top>=-2&&r.bottom<=innerHeight+2;return p})()");
+            observation = "dom=" + page.optBoolean("dom") + ", composer=" + page.optBoolean("composer")
+                    + ", sameOrigin=" + page.optBoolean("sameOrigin") + ", tokenFree=" + page.optBoolean("tokenFree")
+                    + ", top=" + page.optInt("top", -1) + ", bottom=" + page.optInt("bottom", -1)
+                    + ", viewport=" + page.optInt("viewport", -1);
             if (page.optBoolean("ready")) { ready = true; break; }
             SystemClock.sleep(200);
         } while (SystemClock.elapsedRealtime() < deadline);
         LocalRuntimeSmoke.require(ready, "rendered composer must be visible in the viewport");
+        stage = previousStage + "/fullscreen";
+        observation = null;
         final boolean[] fullscreen = new boolean[1];
         host.runOnMainSync(() -> {
             WebView web = findWebView(activity.getWindow().getDecorView());
@@ -176,6 +204,8 @@ final class MobileLayoutAcceptance {
                     && web.getWidth() > 0 && web.getHeight() >= root.getHeight() * 0.8;
         });
         LocalRuntimeSmoke.require(fullscreen[0], "native runtime controls must stay hidden while WebView is ready");
+        stage = previousStage;
+        observation = null;
     }
 
     private void longTextScroll(Activity activity) throws Exception {
