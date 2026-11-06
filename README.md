@@ -68,7 +68,7 @@ The current local APK uses an Android debug signing key. Production signing, com
 - [Build guide: English](docs/android/BUILD.en.md) / [中文](docs/android/BUILD.zh-CN.md)
 - [Verification: English](docs/android/VERIFICATION.en.md) / [中文](docs/android/VERIFICATION.zh-CN.md)
 - [Architecture constraints](AGENTS.md) and [engine architecture](docs/architecture.md)
-- [GitHub repository](https://github.com/yanhuicsdn/atomcode-android)
+- [GitHub repository](https://github.com/yanhuicsdn/AtomCode-Go)
 - [GitCode repository](https://gitcode.com/superyan/AtomCode-Go)
 
 The Android host is independently implemented using dsh-Go as an architectural reference; its code and artwork have not been copied. AtomCode's engine and this repository use the [MIT license](LICENSE). Distributed runtime dependencies retain their own licenses, including PRoot's GPL-2.0 and talloc's LGPL-3.0-or-later. Dependency versions, hashes and source locations are recorded in [the runtime manifest inputs](android/runtime/dependencies.json).

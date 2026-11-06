@@ -68,7 +68,7 @@ Android 负责安装、进程生命周期和展示，AtomCode 保持 agent 与�
 - [构建说明：中文](docs/android/BUILD.zh-CN.md) / [English](docs/android/BUILD.en.md)
 - [验收记录：中文](docs/android/VERIFICATION.zh-CN.md) / [English](docs/android/VERIFICATION.en.md)
 - [架构约束](AGENTS.md)与[引擎架构](docs/architecture.md)
-- [GitHub 仓库](https://github.com/yanhuicsdn/atomcode-android)
+- [GitHub 仓库](https://github.com/yanhuicsdn/AtomCode-Go)
 - [GitCode 仓库](https://gitcode.com/superyan/AtomCode-Go)
 
 Android 宿主参考 dsh-Go 的架构独立实现，没有复制其代码或品牌素材。AtomCode 引擎及本仓库采用 [MIT 许可证](LICENSE)；分发的运行依赖保留各自许可证，包括 PRoot 的 GPL-2.0、talloc 的 LGPL-3.0-or-later。版本、摘要与源码地址记录在[运行环境依赖清单](android/runtime/dependencies.json)中。
