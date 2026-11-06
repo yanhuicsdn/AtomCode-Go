@@ -10,7 +10,7 @@
 
 ## 验证与限制
 
-初始集成包已通过 Android 14 ARM64 真机及 Android 16 ARM64 模拟器的本机核心 smoke test。新版更名、自动启动和全屏仍须按对应新 APK 复测。详见 [验收记录](VERIFICATION.zh-CN.md)，不能把首轮产物结果冒充新版或全部设备验收。
+本次 APK 已通过 Android 14 ARM64 真机及 Android 16 ARM64 模拟器的 12 项本机 smoke test，包括更名、自动启动、全屏、输入法和快速重启。模拟器断网后同样通过本机检查。详见 [验收记录](VERIFICATION.zh-CN.md)，不能把首轮产物结果冒充新版或全部设备验收。
 
 官方 CodingPlan 依赖未公开的签名组件。源码构建登录 AtomGit 后仍无法调用官方模型，需要配置自己的兼容模型 API。不要恢复占位签名、伪造认证或静默降级。
 

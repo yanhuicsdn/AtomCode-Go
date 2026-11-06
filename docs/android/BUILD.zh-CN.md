@@ -36,6 +36,7 @@ PRoot 原生组件由 Android 安装器解压到 `nativeLibraryDir`。Linux root
 ```bash
 adb -s DEVICE install -r dist/android/atomcode-go-arm64-debug.apk
 adb -s DEVICE install -r dist/android/atomcode-go-arm64-smoke-tests.apk
+adb -s DEVICE shell am force-stop io.github.yanhuicsdn.atomcode
 adb -s DEVICE shell am instrument -w \
   io.github.yanhuicsdn.atomcode.test/io.github.yanhuicsdn.atomcode.LocalRuntimeSmoke
 ```
@@ -63,3 +64,5 @@ adb -s DEVICE shell am instrument -w \
 - 前台服务不等于系统保证常驻。当前唤醒锁最多保持 30 分钟；Android 强制停止、后台限制和不同厂商行为仍需设备记录。
 - 原生 PRoot 组件 ELF LOAD 对齐为 16 KB；此静态检查不能替代 16 KB 页大小设备运行验证。
 - 公开分发前仍需完成第三方对应源码、构建配方与许可交付审核；仅有源代码 URL 不能替代适用许可证要求的完整对应源码。
+
+界面测试期间保持设备解锁，先关闭 Android 首次全屏提示；模拟器连接实体键盘时，测试屏幕键盘缩放前应启用屏幕键盘。

@@ -36,11 +36,14 @@ Native PRoot components are extracted by Android into `nativeLibraryDir`. Linux 
 ```bash
 adb -s DEVICE install -r dist/android/atomcode-go-arm64-debug.apk
 adb -s DEVICE install -r dist/android/atomcode-go-arm64-smoke-tests.apk
+adb -s DEVICE shell am force-stop io.github.yanhuicsdn.atomcode
 adb -s DEVICE shell am instrument -w \
   io.github.yanhuicsdn.atomcode.test/io.github.yanhuicsdn.atomcode.LocalRuntimeSmoke
 ```
 
 The smoke suite uses the actual Linux/PRoot daemon, TLS gateway, WebView, terminal and filesystem. It creates a new test project rather than overwriting user projects. It does not call a model and cannot establish real-model acceptance.
+
+Keep the device unlocked during UI checks. Dismiss Android’s first-use fullscreen hint; on emulators with a hardware keyboard, enable the on-screen keyboard before testing IME resizing.
 
 After configuring a supported model inside the app, the optional real-model test is:
 

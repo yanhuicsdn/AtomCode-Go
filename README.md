@@ -64,7 +64,7 @@ The current local APK uses an Android debug signing key. Production signing, com
 
 ## Sources and documentation
 
-- [Goals and acceptance criteria](docs/android/GOAL-AND-ACCEPTANCE.zh-CN.md)
+- [Goals and acceptance criteria](docs/android/GOAL-AND-ACCEPTANCE.en.md)
 - [Build guide: English](docs/android/BUILD.en.md) / [中文](docs/android/BUILD.zh-CN.md)
 - [Verification: English](docs/android/VERIFICATION.en.md) / [中文](docs/android/VERIFICATION.zh-CN.md)
 - [Architecture constraints](AGENTS.md) and [engine architecture](docs/architecture.md)
