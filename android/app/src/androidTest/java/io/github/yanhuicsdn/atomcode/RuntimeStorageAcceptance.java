@@ -149,6 +149,23 @@ final class RuntimeStorageAcceptance {
                     "maintenance must retry successfully after storage recovers");
             runner.pass("Cleanup failure remains observable without losing a committed install, and retries after recovery");
 
+            step = "resume interrupted generation reclamation";
+            Path garbage = runtime.resolve(".gc-staging");
+            Files.createDirectories(garbage.resolve("partially-deleted"));
+            Files.write(garbage.resolve("partially-deleted/chunk"), new byte[]{1});
+            Files.createSymbolicLink(garbage.resolve("outside-link"), outside);
+            LocalRuntimeSmoke.require(installer.isCurrent() && !Files.exists(garbage, java.nio.file.LinkOption.NOFOLLOW_LINKS),
+                    "a partial reserved GC slot without ready marker must be reclaimed on next valid startup");
+            LocalRuntimeSmoke.require(Arrays.equals(keep, Files.readAllBytes(outside.resolve("keep"))), "nested GC links must not delete their targets");
+            Files.createSymbolicLink(garbage, outside);
+            try {
+                LocalRuntimeSmoke.require(installer.isCurrent() && installer.maintenanceWarning() != null
+                        && Files.isSymbolicLink(garbage), "a top-level GC slot link must warn and remain untouched");
+            } finally { Files.delete(garbage); }
+            LocalRuntimeSmoke.require(installer.isCurrent() && installer.maintenanceWarning() == null
+                    && Arrays.equals(keep, Files.readAllBytes(canary)), "GC retry must preserve the committed generation and home");
+            runner.pass("Partial reserved GC state resumes safely while top-level and nested symlink targets remain protected");
+
             step = "workspace transfer roundtrip";
             Path script = workspace.resolve("run.sh");
             byte[] content = "#!/bin/sh\nprintf '中文\\n'\n".getBytes(StandardCharsets.UTF_8);

@@ -72,4 +72,48 @@ public class RuntimeGenerationsTest {
             assertTrue(Files.exists(a)); assertTrue(Files.exists(b));
         } finally { RuntimeFiles.deleteTree(temporary); }
     }
+
+    @Test public void resumesPartiallyDeletedReservedSlotEvenWhenReadyMarkerIsGone() throws Exception {
+        Path temporary = Files.createTempDirectory("atomcode-generation-resume-test");
+        try {
+            Path base = Files.createDirectory(temporary.resolve("runtime"));
+            Path previous = completed(base, 'a'), active = completed(base, 'b'), retired = completed(base, 'c');
+            Path home = Files.createDirectory(temporary.resolve("home"));
+            Files.write(home.resolve("keep"), new byte[]{99});
+            Path slot = base.resolve(".gc-staging");
+            RuntimeFiles.atomicMove(retired, slot);
+            Files.delete(slot.resolve(".ready")); // terminated midway through deletion
+            Files.createSymbolicLink(slot.resolve("outside"), home);
+            assertTrue(RuntimeGenerations.pruneCommitted(base, name('b'), name('b') + "\n" + name('a') + "\n"));
+            assertFalse(Files.exists(slot, java.nio.file.LinkOption.NOFOLLOW_LINKS));
+            assertTrue(Files.isDirectory(previous)); assertTrue(Files.isDirectory(active));
+            assertArrayEquals(new byte[]{99}, Files.readAllBytes(home.resolve("keep")));
+        } finally { RuntimeFiles.deleteTree(temporary); }
+    }
+
+    @Test public void linkedReservedSlotCannotAuthorizeOutsideDeletionOrAnyPruning() throws Exception {
+        Path temporary = Files.createTempDirectory("atomcode-generation-slot-link-test");
+        try {
+            Path base = Files.createDirectory(temporary.resolve("runtime"));
+            Path old = completed(base, 'a'), active = completed(base, 'b');
+            Path home = Files.createDirectory(temporary.resolve("home"));
+            Files.write(home.resolve("keep"), new byte[]{99});
+            Path slot = Files.createSymbolicLink(base.resolve(".gc-staging"), home);
+            assertThrows(IOException.class, () -> RuntimeGenerations.pruneCommitted(base, name('b'), name('b') + "\n\n"));
+            assertTrue(Files.isSymbolicLink(slot)); assertTrue(Files.exists(old)); assertTrue(Files.exists(active));
+            assertArrayEquals(new byte[]{99}, Files.readAllBytes(home.resolve("keep")));
+        } finally { RuntimeFiles.deleteTree(temporary); }
+    }
+
+    @Test public void nonDirectoryReservedSlotIsPreservedAndReported() throws Exception {
+        Path temporary = Files.createTempDirectory("atomcode-generation-slot-file-test");
+        try {
+            Path base = Files.createDirectory(temporary.resolve("runtime"));
+            Path old = completed(base, 'a'), active = completed(base, 'b');
+            Path slot = base.resolve(".gc-staging"); Files.write(slot, new byte[]{7});
+            assertThrows(IOException.class, () -> RuntimeGenerations.pruneCommitted(base, name('b'), name('b') + "\n\n"));
+            assertArrayEquals(new byte[]{7}, Files.readAllBytes(slot));
+            assertTrue(Files.exists(old)); assertTrue(Files.exists(active));
+        } finally { RuntimeFiles.deleteTree(temporary); }
+    }
 }

@@ -11,6 +11,9 @@ import java.util.regex.Pattern;
 /** Conservative post-commit reclamation of installer-owned completed directories. */
 final class RuntimeGenerations {
     private static final Pattern NAME = Pattern.compile("atomcode-[a-f0-9]{16}-[a-f0-9]{32}");
+    // Reserved host-owned slot, like the installer's staging directory. A
+    // completed retired generation is renamed here before any bytes are deleted.
+    private static final String GC_SLOT = ".gc-staging";
     private RuntimeGenerations() {}
 
     static boolean validName(String name) { return name != null && NAME.matcher(name).matches(); }
@@ -32,15 +35,33 @@ final class RuntimeGenerations {
     static void prune(Path base, String active, String previous) throws IOException {
         if (Files.isSymbolicLink(base) || !completed(base, active))
             throw new IOException("当前运行环境无效，未清理历史环境");
+        Path garbage = base.resolve(GC_SLOT);
+        clearGarbageSlot(garbage);
         try (java.nio.file.DirectoryStream<Path> entries = Files.newDirectoryStream(base)) {
             for (Path entry : entries) {
                 String name = entry.getFileName().toString();
                 if (name.equals(active) || name.equals(previous)) continue;
                 // Unknown entries, staging, malformed markers and all top-level
                 // links remain untouched. walkFileTree never follows nested links.
-                if (completed(base, name)) RuntimeFiles.deleteTree(entry);
+                if (completed(base, name)) {
+                    if (Files.exists(garbage, LinkOption.NOFOLLOW_LINKS))
+                        throw new IOException("历史环境清理槽被占用，稍后重试");
+                    RuntimeFiles.atomicMove(entry, garbage);
+                    // A process kill during deletion may remove .ready first.
+                    // The reserved slot itself carries ownership across retry.
+                    clearGarbageSlot(garbage);
+                }
             }
         }
+    }
+
+    private static void clearGarbageSlot(Path garbage) throws IOException {
+        if (!Files.exists(garbage, LinkOption.NOFOLLOW_LINKS)) return;
+        if (Files.isSymbolicLink(garbage) || !Files.isDirectory(garbage, LinkOption.NOFOLLOW_LINKS))
+            throw new IOException("历史环境清理槽类型无效，未执行清理");
+        // Never follows nested links. A top-level link is rejected above so
+        // neither the link nor an outside target is modified as a GC slot.
+        RuntimeFiles.deleteTree(garbage);
     }
 
     static boolean pruneCommitted(Path base, String active, String record) throws IOException {
