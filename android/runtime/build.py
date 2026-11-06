@@ -58,8 +58,13 @@ def fetch(item: dict, cache: Path) -> Path:
                 while block := source.read(1024 * 1024):
                     target.write(block)
         partial = Path(name)
-        if file_digest(partial) != item["sha256"]:
-            raise ValueError("SHA-256 mismatch: " + item["name"])
+        actual = file_digest(partial)
+        if actual != item["sha256"]:
+            raise ValueError(
+                "SHA-256 mismatch: " + item["name"]
+                + " (expected " + item["sha256"] + ", got " + actual
+                + ", bytes " + str(partial.stat().st_size) + ")"
+            )
         os.replace(partial, path)
     finally:
         Path(name).unlink(missing_ok=True)
