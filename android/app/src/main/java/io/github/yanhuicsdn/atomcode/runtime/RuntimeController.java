@@ -52,6 +52,7 @@ public final class RuntimeController {
     public void addListener(Listener listener) { listeners.add(listener); }
     public void removeListener(Listener listener) { listeners.remove(listener); }
     public String origin() { LocalGateway value = gateway; return phase == Phase.RUNNING && value != null ? value.origin : null; }
+    public long connectionGeneration() { return generation.get(); }
     public byte[] certificate() { LocalGateway value = gateway; return value == null ? null : value.certificate.clone(); }
     public String gatewayFailure() { LocalGateway value = gateway; return value == null ? null : value.lastFailure; }
     public String processInspection() { return OwnedProcesses.diagnostic(); }

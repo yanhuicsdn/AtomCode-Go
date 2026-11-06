@@ -40,6 +40,7 @@ public class LocalRuntimeSmoke extends Instrumentation {
     private boolean realSpace;
     private String realSpaceConfirmation;
     private String realSpaceCase;
+    private boolean fileChooser;
 
     @Override public void onCreate(Bundle arguments) {
         super.onCreate(arguments);
@@ -52,9 +53,11 @@ public class LocalRuntimeSmoke extends Instrumentation {
         realSpace = arguments != null && "true".equals(arguments.getString("real_space"));
         realSpaceConfirmation = arguments == null ? null : arguments.getString("real_space_confirmation");
         realSpaceCase = arguments == null ? null : arguments.getString("real_space_case");
+        fileChooser = arguments != null && "true".equals(arguments.getString("file_chooser"));
         start();
     }
     @Override public void onStart() {
+        if (fileChooser) { new FileChooserAcceptance(this).run(); return; }
         if (realSpace) { new RealSpaceAcceptance(this, realSpaceConfirmation, realSpaceCase).run(); return; }
         if (securityLease) { new SecurityLeaseAcceptance(this, leaseId).run(); return; }
         if (layout) { new MobileLayoutAcceptance(this, keyboardRotation).run(); return; }

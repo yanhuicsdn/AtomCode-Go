@@ -44,20 +44,38 @@ public final class MainActivity extends Activity implements RuntimeController.Li
     private Button importFiles;
     private Button exportFiles;
     private ProgressBar progress;
-    private WebView web;
+    private LinearLayout workspaceContainer;
+    private volatile WebView web;
+    private String webOrigin;
+    private long webGeneration = -1;
     private String webUnavailable;
     private String loadedOrigin;
-    private ValueCallback<Uri[]> upload;
-    private static final int CHOOSE_FILE = 10;
+    private long loadedGeneration = -1;
+    private String requestedOrigin;
+    private long requestedGeneration = -1;
+    private boolean workspaceConnectionFailed;
+    private String failedOrigin;
+    private long failedGeneration = -1;
+    private long webLoadRequest;
+    private FileChooserRequest upload;
+    private int nextUploadCode = FileChooserRequest.FIRST_CODE;
+    private boolean started;
+    private boolean listening;
+    private boolean destroying;
+    private boolean chooserStateSaved;
+    private static final String NEXT_UPLOAD_CODE = "next-file-chooser-code";
     private static final int IMPORT = 11;
     private static final int EXPORT = 12;
 
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
         controller = RuntimeController.get(this);
+        if (saved != null) nextUploadCode = Math.max(FileChooserRequest.FIRST_CODE,
+                saved.getInt(NEXT_UPLOAD_CODE, FileChooserRequest.FIRST_CODE));
         getWindow().setStatusBarColor(Color.rgb(21, 59, 53));
         getWindow().setNavigationBarColor(Color.rgb(247, 248, 244));
         LinearLayout root = new LinearLayout(this);
+        workspaceContainer = root;
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Color.rgb(247, 248, 244));
         root.setFitsSystemWindows(true);
@@ -129,6 +147,11 @@ public final class MainActivity extends Activity implements RuntimeController.Li
     }
 
     private void createWebView(LinearLayout root) {
+        String origin = controller.origin();
+        long generation = controller.connectionGeneration();
+        webOrigin = origin;
+        webGeneration = generation;
+        webUnavailable = null;
         try {
             android.content.pm.PackageInfo provider = WebView.getCurrentWebViewPackage();
             if (provider == null || !WebViewCompatibility.supports(provider.versionName)) {
@@ -136,24 +159,24 @@ public final class MainActivity extends Activity implements RuntimeController.Li
                         + "\nUpdate Android System WebView to Chromium 99 or newer, then reopen AtomCode-Go.";
                 return;
             }
-            web = new WebView(this);
-            configureWebView();
-            root.addView(web, new LinearLayout.LayoutParams(-1, 0, 1));
+            WebView created = new WebView(this);
+            web = created;
+            configureWebView(created, origin, generation);
+            root.addView(created, new LinearLayout.LayoutParams(-1, 0, 1));
         } catch (RuntimeException | LinkageError unavailable) {
             // Provider installation/initialization can fail even when package
             // metadata exists. Keep the native recovery controls usable.
-            if (web != null) {
-                try { web.destroy(); } catch (RuntimeException | LinkageError ignored) {}
-                web = null;
-            }
+            retireWebView();
+            webOrigin = origin;
+            webGeneration = generation;
             webUnavailable = "Android System WebView 无法启动。请安装并启用兼容版本（Chromium 99 或更新版本），然后重新打开应用。"
                     + "\nAndroid System WebView could not start. Install/enable a compatible provider (Chromium 99+), then reopen the app.";
         }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private void configureWebView() {
-        WebSettings settings = web.getSettings();
+    private void configureWebView(WebView owner, String origin, long generation) {
+        WebSettings settings = owner.getSettings();
         settings.setJavaScriptEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setAllowFileAccess(false);
@@ -162,10 +185,11 @@ public final class MainActivity extends Activity implements RuntimeController.Li
         settings.setSupportMultipleWindows(false);
         settings.setJavaScriptCanOpenWindowsAutomatically(false);
         settings.setMediaPlaybackRequiresUserGesture(true);
-        CookieManager.getInstance().setAcceptThirdPartyCookies(web, false);
-        web.setWebViewClient(new WebViewClient() {
+        CookieManager.getInstance().setAcceptThirdPartyCookies(owner, false);
+        owner.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
-                if (isLocal(request.getUrl().toString())) return false;
+                if (view != owner || !currentConnection(owner, origin, generation)) return true;
+                if (isLocal(request.getUrl().toString(), origin)) return false;
                 Uri uri = request.getUrl();
                 if (request.isForMainFrame() && request.hasGesture()
                         && ("https".equals(uri.getScheme()) || "http".equals(uri.getScheme()))) {
@@ -176,60 +200,185 @@ public final class MainActivity extends Activity implements RuntimeController.Li
             }
 
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                if (isLocal(request.getUrl().toString())) return null;
+                // Chromium calls this on a worker thread. Only compare the
+                // volatile identity and immutable connection binding here.
+                if (view == owner && currentConnection(owner, origin, generation)
+                        && isLocal(request.getUrl().toString(), origin)) return null;
                 return new WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden", Collections.emptyMap(), new ByteArrayInputStream(new byte[0]));
             }
 
             @SuppressLint("WebViewClientOnReceivedSslError")
             @Override public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                if (view != owner || !currentConnection(owner, origin, generation)) { handler.cancel(); return; }
                 Bundle certificate = SslCertificate.saveState(error.getCertificate());
                 byte[] actual = certificate == null ? null : certificate.getByteArray("x509-certificate");
                 byte[] expected = controller.certificate();
                 // A precise certificate pin for our exact active origin; never
                 // trust arbitrary self-signed localhost listeners.
-                if (isLocal(error.getUrl()) && actual != null && expected != null && Arrays.equals(actual, expected)) handler.proceed();
+                if (isLocal(error.getUrl(), origin) && actual != null && expected != null && Arrays.equals(actual, expected)) handler.proceed();
                 else handler.cancel();
             }
 
             @Override public void onReceivedError(WebView view, android.webkit.WebResourceRequest request, android.webkit.WebResourceError error) {
                 if (request.isForMainFrame()) runOnUiThread(() -> {
-                    if (isDestroyed() || web == null) return;
+                    if (view != owner || !currentConnection(owner, origin, generation)) return;
                     // The default Chromium error page echoes its failing URL,
                     // including a bootstrap token. Show only native status.
-                    web.setVisibility(View.GONE);
+                    webLoadRequest++;
+                    workspaceConnectionFailed = true;
+                    failedOrigin = origin;
+                    failedGeneration = generation;
+                    owner.setVisibility(View.GONE);
+                    cancelUpload();
                     chrome.setVisibility(View.VISIBLE);
                     setRuntimeFullscreen(false);
                     status.setText("本机界面连接中断，请停止后重新启动");
                 });
             }
         });
-        web.setWebChromeClient(new WebChromeClient() {
+        owner.setWebChromeClient(new WebChromeClient() {
             @Override public void onPermissionRequest(PermissionRequest request) { request.deny(); }
             @Override public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> callback, FileChooserParams parameters) {
-                if (upload != null) upload.onReceiveValue(null);
-                upload = callback;
-                Intent picker = new Intent(Intent.ACTION_OPEN_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("*/*");
-                try { startActivityForResult(picker, CHOOSE_FILE); }
-                catch (ActivityNotFoundException error) { upload.onReceiveValue(null); upload = null; toast("文件选择器不可用"); }
-                return true;
+                if (view != owner || !currentConnection(owner, origin, generation)) {
+                    FileChooserRequest.rejectOrDeliver(callback, null);
+                    return true;
+                }
+                return chooseFile(view, callback, parameters);
             }
         });
-        web.setDownloadListener((url, agent, disposition, type, length) -> toast("请使用工作区导出功能保存文件"));
+        owner.setDownloadListener((url, agent, disposition, type, length) -> {
+            if (currentConnection(owner, origin, generation)) toast("请使用工作区导出功能保存文件");
+        });
     }
 
     private boolean isLocal(String url) {
-        String origin = controller.origin();
-        if (origin == null) return false;
+        return isLocal(url, controller.origin());
+    }
+
+    private static boolean isLocal(String url, String origin) {
+        if (origin == null || url == null) return false;
         Uri parsed = Uri.parse(url);
         Uri expected = Uri.parse(origin);
         return "https".equals(parsed.getScheme()) && "127.0.0.1".equals(parsed.getHost())
                 && parsed.getPort() == expected.getPort() && parsed.getUserInfo() == null;
     }
 
-    @Override protected void onStart() { super.onStart(); controller.addListener(this); changed(); }
-    @Override protected void onStop() { controller.removeListener(this); super.onStop(); }
+    private boolean currentConnection(WebView owner, String origin, long generation) {
+        return owner != null && owner == web && origin != null && origin.equals(controller.origin())
+                && generation == controller.connectionGeneration();
+    }
+
+    private void retireWebView() {
+        WebView retired = web;
+        web = null; // Retire callback authority before cleanup or callback reentry.
+        webOrigin = null;
+        webGeneration = -1;
+        webLoadRequest++;
+        loadedOrigin = null;
+        loadedGeneration = -1;
+        requestedOrigin = null;
+        requestedGeneration = -1;
+        workspaceConnectionFailed = false;
+        failedOrigin = null;
+        failedGeneration = -1;
+        if (retired != null && workspaceContainer != null) workspaceContainer.removeView(retired);
+        cancelUpload();
+        if (retired != null) {
+            try { retired.stopLoading(); } catch (RuntimeException | LinkageError ignored) {}
+            try { retired.destroy(); } catch (RuntimeException | LinkageError ignored) {}
+        }
+    }
+
+    private void refreshWebViewConnection() {
+        String origin = controller.origin();
+        long generation = controller.connectionGeneration();
+        if (origin != null && (!origin.equals(webOrigin) || generation != webGeneration)) {
+            retireWebView();
+            createWebView(workspaceContainer);
+        } else if (origin == null && webOrigin != null) {
+            retireWebView();
+            CookieManager.getInstance().removeAllCookies(null);
+        }
+    }
+
+    private boolean trustedChooser(WebView view, String origin, long generation) {
+        return !destroying && !isFinishing() && !workspaceConnectionFailed
+                && controller.phase == RuntimeController.Phase.RUNNING && view != null
+                && view == web && view.getVisibility() == View.VISIBLE
+                && origin != null && origin.equals(controller.origin()) && origin.equals(loadedOrigin)
+                && generation == controller.connectionGeneration() && generation == loadedGeneration && isLocal(view.getUrl());
+    }
+
+    private boolean chooseFile(WebView view, ValueCallback<Uri[]> callback, WebChromeClient.FileChooserParams parameters) {
+        // A request accepted after the saved counter snapshot could reuse its
+        // code after recreation. Existing pending results remain valid here.
+        if (!started || chooserStateSaved) {
+            FileChooserRequest.rejectOrDeliver(callback, null);
+            return true;
+        }
+        String origin = controller.origin();
+        long generation = controller.connectionGeneration();
+        FileChooserRequest next;
+        try {
+            if (!trustedChooser(view, origin, generation) || nextUploadCode > FileChooserRequest.LAST_CODE)
+                throw new IllegalArgumentException("Unavailable document selection owner");
+            next = new FileChooserRequest(view, origin, generation, nextUploadCode++, callback, parameters);
+        } catch (RuntimeException unavailable) {
+            cancelUpload();
+            FileChooserRequest.rejectOrDeliver(callback, null);
+            return true;
+        }
+        FileChooserRequest previous = upload;
+        upload = next;
+        syncListener();
+        if (previous != null) previous.complete(null);
+        // A canceled callback can reenter and replace this request. Never
+        // launch it afterward or let an older picker result complete its successor.
+        if (upload != next) return true;
+        if (!trustedChooser(next.view, next.origin, next.generation)) { finishUpload(next, null); return true; }
+        try { startActivityForResult(next.picker, next.code); }
+        catch (RuntimeException unavailable) {
+            finishUpload(next, null);
+            toast("文件选择器不可用");
+        }
+        return true;
+    }
+
+    private void finishUpload(FileChooserRequest expected, Uri[] values) {
+        if (upload != expected) return;
+        upload = null;
+        syncListener();
+        expected.complete(values);
+    }
+
+    private void cancelUpload() {
+        FileChooserRequest pending = upload;
+        if (pending != null) finishUpload(pending, null);
+    }
+
+    private void syncListener() {
+        boolean wanted = !destroying && (started || upload != null);
+        if (wanted && !listening) { controller.addListener(this); listening = true; }
+        else if (!wanted && listening) { controller.removeListener(this); listening = false; }
+    }
+
+    @Override protected void onStart() { super.onStart(); started = true; chooserStateSaved = false; syncListener(); changed(); }
+    @Override protected void onStop() { started = false; syncListener(); super.onStop(); }
+    @Override protected void onSaveInstanceState(Bundle state) {
+        chooserStateSaved = true;
+        state.putInt(NEXT_UPLOAD_CODE, nextUploadCode);
+        super.onSaveInstanceState(state);
+    }
     @Override public void changed() {
-        String message = controller.message + (controller.phase == RuntimeController.Phase.INSTALLING ? " · " + controller.progress + "%" : "");
+        if (destroying) return;
+        refreshWebViewConnection();
+        if (upload != null && !trustedChooser(upload.view, upload.origin, upload.generation)) cancelUpload();
+        String origin = controller.origin();
+        long generation = controller.connectionGeneration();
+        boolean failedPage = workspaceConnectionFailed && origin != null && origin.equals(failedOrigin)
+                && generation == failedGeneration;
+        String message = failedPage ? "本机界面连接中断，请停止后重新启动"
+                : controller.message + (controller.phase == RuntimeController.Phase.INSTALLING ? " · " + controller.progress + "%" : "");
         status.setText(webUnavailable == null ? message : message + "\n\n" + webUnavailable);
         progress.setVisibility(controller.busy() ? View.VISIBLE : View.GONE);
         progress.setIndeterminate(controller.phase != RuntimeController.Phase.INSTALLING);
@@ -241,35 +390,44 @@ public final class MainActivity extends Activity implements RuntimeController.Li
         exportFiles.setEnabled(transferAllowed);
         importFiles.setVisibility(controller.phase == RuntimeController.Phase.RUNNING ? View.GONE : View.VISIBLE);
         exportFiles.setVisibility(controller.phase == RuntimeController.Phase.RUNNING ? View.GONE : View.VISIBLE);
-        String origin = controller.origin();
-        boolean running = origin != null && web != null;
+        boolean running = origin != null && web != null && !failedPage;
         chrome.setVisibility(running ? View.GONE : View.VISIBLE);
         setRuntimeFullscreen(running);
         introduction.setVisibility(running ? View.GONE : View.VISIBLE);
         if (web != null) web.setVisibility(running ? View.VISIBLE : View.GONE);
-        if (running && !origin.equals(loadedOrigin)) {
-            loadedOrigin = origin;
-            CookieManager.getInstance().removeAllCookies(removed -> {
-                if (!isDestroyed() && web != null && origin.equals(controller.origin())) {
-                    web.clearSslPreferences();
-                    web.loadUrl(controller.entryUrl());
-                }
-            });
-        } else if (web != null && !running && loadedOrigin != null) {
-            loadedOrigin = null;
-            web.stopLoading();
-            web.loadUrl("about:blank");
-            web.clearHistory();
+        if (running && (!origin.equals(requestedOrigin) || generation != requestedGeneration)) {
+            requestedOrigin = origin;
+            requestedGeneration = generation;
+            long request = ++webLoadRequest;
+            WebView owner = web;
+            CookieManager.getInstance().removeAllCookies(removed -> loadWorkspace(owner, origin, generation, request));
+        } else if (web != null && origin == null && requestedOrigin != null) {
+            retireWebView();
             CookieManager.getInstance().removeAllCookies(null);
+        }
+    }
+
+    private void loadWorkspace(WebView owner, String origin, long generation, long request) {
+        if (!destroying && !isDestroyed() && currentConnection(owner, origin, generation) && request == webLoadRequest
+                && generation == requestedGeneration
+                && origin.equals(requestedOrigin)) {
+            owner.clearSslPreferences();
+            workspaceConnectionFailed = false;
+            failedOrigin = null;
+            failedGeneration = -1;
+            loadedOrigin = origin;
+            loadedGeneration = generation;
+            owner.loadUrl(controller.entryUrl());
         }
     }
 
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
-        if (request == CHOOSE_FILE && upload != null) {
-            Uri uri = result == RESULT_OK && data != null ? data.getData() : null;
-            upload.onReceiveValue(uri != null && "content".equals(uri.getScheme()) ? new Uri[]{uri} : null);
-            upload = null;
+        if (request >= FileChooserRequest.FIRST_CODE && request <= FileChooserRequest.LAST_CODE) {
+            FileChooserRequest pending = upload;
+            if (pending != null && pending.code == request)
+                finishUpload(pending, trustedChooser(pending.view, pending.origin, pending.generation) ? pending.selection(result, data) : null);
+            return;
         }
         if ((request == IMPORT || request == EXPORT) && result == RESULT_OK && data != null) {
             Uri uri = data.getData();
@@ -329,12 +487,10 @@ public final class MainActivity extends Activity implements RuntimeController.Li
         else super.onBackPressed();
     }
     @Override protected void onDestroy() {
-        if (upload != null) upload.onReceiveValue(null);
-        if (web != null) {
-            web.stopLoading();
-            web.destroy();
-            web = null;
-        }
+        destroying = true;
+        retireWebView();
+        controller.removeListener(this);
+        listening = false;
         super.onDestroy();
     }
 }
