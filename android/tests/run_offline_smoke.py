@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Run default 12-check smoke offline on the already running owned 16KB AVD.
+"""Run default 12-check smoke offline on one explicitly owned, already running AVD.
 
 Never starts an AVD, installs APKs, clears data, reads credentials, or calls a
 model. Initial airplane mode must be off with a working default connection.
 Disable WiFi before enabling airplane mode; leave the mobile_data user preference
 unchanged. Restore airplane/WiFi through platform commands and require the
 original default transport to reconnect, not merely matching settings values.
+The default AVD requires 16384-byte pages. The separately named AOSP backup AVD
+requires 4096-byte pages and produces 4KB evidence, never 16KB evidence.
 """
 import argparse
 import datetime
@@ -22,6 +24,7 @@ import zipfile
 OWNER = "io.github.yanhuicsdn.atomcode"
 RUNNER = OWNER + ".test/" + OWNER + ".LocalRuntimeSmoke"
 OWNED_AVD = "AtomCode_API36_16K_Arm64"
+OWNED_AVDS = {OWNED_AVD: 16384, "AtomCode_Backup_AOSP36_Arm64": 4096}
 TOTAL_SECONDS = 360
 INSTRUMENT_SECONDS = 300
 CLEANUP_RESERVE = 60
@@ -124,9 +127,11 @@ def is_offline(snapshot):
 
 
 class Device:
-    def __init__(self, adb, serial, deadline):
+    def __init__(self, adb, serial, deadline, avd=OWNED_AVD):
+        require(avd in OWNED_AVDS, "avd-not-in-exact-owned-allowlist")
         self.prefix = [adb, "-s", serial]
         self.deadline = deadline
+        self.avd = avd
 
     def remaining(self, cap=10):
         remaining = self.deadline - time.monotonic()
@@ -140,11 +145,15 @@ class Device:
 
     def verify_owned(self):
         require(self.call("get-state").stdout.strip() == b"device", "owned-emulator-not-online")
-        require(self.call("emu", "avd", "name").stdout.decode("ascii").splitlines()[0].strip() == OWNED_AVD,
-                "avd-not-in-exact-owned-allowlist")
+        actual_avd = self.call("emu", "avd", "name").stdout.decode("ascii").splitlines()[0].strip()
+        require(actual_avd == self.avd, "avd-not-in-exact-owned-allowlist")
         require(self.call("shell", "getprop", "ro.hardware").stdout.strip() == b"ranchu", "ranchu-emulator-required")
         require(self.call("shell", "getprop", "ro.kernel.qemu").stdout.strip() == b"1", "qemu-emulator-required")
-        require(self.call("shell", "getconf", "PAGE_SIZE").stdout.strip() == b"16384", "actual-16k-pages-required")
+        page = self.call("shell", "getconf", "PAGE_SIZE").stdout.decode("ascii").strip()
+        require(page.isdigit() and int(page) == OWNED_AVDS[self.avd], "page-size-does-not-match-owned-avd")
+        return {"avd": actual_avd, "hardware": "ranchu", "pageSize": int(page), "pageSizeSource": "getconf PAGE_SIZE",
+                "is16kEnvironment": int(page) == 16384,
+                "pageEvidenceScope": "16KB owned emulator" if int(page) == 16384 else "4KB AOSP backup emulator; not 16KB evidence"}
 
     def verify_package(self, package, expected):
         lines = self.call("shell", "pm", "path", package).stdout.decode("ascii").splitlines()
@@ -204,6 +213,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--serial", required=True, help="Only emulator-*; phones are rejected before ADB")
     parser.add_argument("--adb", default="adb")
+    parser.add_argument("--avd", choices=list(OWNED_AVDS), default=OWNED_AVD,
+                        help="Exact owned AVD; its fixed expected page size cannot be overridden")
     parser.add_argument("--apk", type=Path, required=True, help="Already installed app APK; hash is checked locally and on device")
     parser.add_argument("--tests-apk", type=Path, required=True, help="Already installed known default-12 test APK")
     parser.add_argument("--output", type=Path, required=True, help="New evidence directory; existing directories are rejected")
@@ -215,9 +226,10 @@ def main(argv=None):
     args.output.mkdir(parents=True)
     started = time.monotonic()
     total_deadline = started + TOTAL_SECONDS
-    device = Device(args.adb, args.serial, total_deadline - CLEANUP_RESERVE)
+    device = Device(args.adb, args.serial, total_deadline - CLEANUP_RESERVE, avd=args.avd)
     report = {"schema": 1, "startedAt": utc_now(), "status": "not-passed", "serial": args.serial,
-              "ownedAvd": OWNED_AVD, "scope": "default local-runtime smoke with WiFi off and airplane-mode cellular disconnection; no offline model inference",
+              "expectedAvd": args.avd, "expectedPageSize": OWNED_AVDS[args.avd],
+              "scope": "default local-runtime smoke with WiFi off and airplane-mode cellular disconnection; no offline model inference",
               "totalLimitSeconds": TOTAL_SECONDS, "instrumentLimitSeconds": INSTRUMENT_SECONDS,
               "cleanupReserveSeconds": CLEANUP_RESERVE, "credentialsRead": False, "modelRequestsSent": False,
               "appInstalledOrDataCleared": False, "mobileDataPreferenceChangedByCoordinator": False,
@@ -232,7 +244,8 @@ def main(argv=None):
     try:
         report["artifacts"] = local_artifacts(args.apk, args.tests_apk)
         stage = "owned-emulator-preflight"
-        device.verify_owned()
+        report["environment"] = device.verify_owned()
+        report["ownedAvd"] = report["environment"]["avd"]
         device.verify_package(OWNER, report["artifacts"]["appSha256"])
         device.verify_package(OWNER + ".test", report["artifacts"]["testsSha256"])
         registered = device.call("shell", "pm", "list", "instrumentation", OWNER).stdout.decode("ascii")

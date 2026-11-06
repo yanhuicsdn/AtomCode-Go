@@ -48,6 +48,47 @@ class OfflineSmokeTests(unittest.TestCase):
                     offline.main(self.arguments(Path(directory)))
             self.assertEqual(failure.exception.code, 2)
 
+    def owned_device(self, expected_avd, actual_avd, page):
+        device = offline.Device("/never-invoked", "emulator-5564", time.monotonic() + 10, avd=expected_avd)
+        values = {("get-state",): b"device\n", ("emu", "avd", "name"): (actual_avd + "\nOK\n").encode(),
+                  ("shell", "getprop", "ro.hardware"): b"ranchu\n", ("shell", "getprop", "ro.kernel.qemu"): b"1\n",
+                  ("shell", "getconf", "PAGE_SIZE"): (str(page) + "\n").encode()}
+        def call(*args, **_kwargs):
+            self.assertIn(args, values)  # No mutation is permitted in this guard test.
+            return subprocess.CompletedProcess([], 0, values[args], b"")
+        device.call = call
+        return device
+
+    def test_exact_allowlist_accepts_backup_only_with_four_k_pages(self):
+        self.assertEqual(offline.OWNED_AVDS, {"AtomCode_API36_16K_Arm64": 16384, "AtomCode_Backup_AOSP36_Arm64": 4096})
+        self.assertEqual(offline.OWNED_AVD, "AtomCode_API36_16K_Arm64")
+        for avd, page in offline.OWNED_AVDS.items():
+            environment = self.owned_device(avd, avd, page).verify_owned()
+            self.assertEqual((environment["avd"], environment["pageSize"]), (avd, page))
+            self.assertEqual(environment["is16kEnvironment"], page == 16384)
+            if page == 4096:
+                self.assertIn("not 16KB evidence", environment["pageEvidenceScope"])
+
+    def test_wrong_page_is_rejected_for_each_owned_avd(self):
+        for avd, expected in offline.OWNED_AVDS.items():
+            for page in (4096 if expected == 16384 else 16384, 8192):
+                with self.subTest(avd=avd, page=page), self.assertRaises(offline.NotProven) as failure:
+                    self.owned_device(avd, avd, page).verify_owned()
+                self.assertEqual(str(failure.exception), "page-size-does-not-match-owned-avd")
+
+    def test_named_avd_mismatch_is_rejected(self):
+        with self.assertRaises(offline.NotProven):
+            self.owned_device("AtomCode_Backup_AOSP36_Arm64", offline.OWNED_AVD, 4096).verify_owned()
+
+    def test_unknown_avd_argument_rejected_before_adb_or_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "new"
+            with patch.object(offline.subprocess, "run", side_effect=AssertionError("ADB invoked")), contextlib.redirect_stderr(io.StringIO()):
+                with self.assertRaises(SystemExit) as failure:
+                    offline.main(self.arguments(output) + ["--avd", "Some_User_AVD"])
+            self.assertEqual(failure.exception.code, 2)
+            self.assertFalse(output.exists())
+
     def test_live_cellular_default_is_not_offline(self):
         summary = offline.connectivity_summary(connected_dump())
         self.assertEqual(offline.default_transports(summary), ["CELLULAR"])
@@ -92,7 +133,7 @@ class OfflineSmokeTests(unittest.TestCase):
                     offline.local_artifacts(app, tests)
             self.assertEqual(str(failure.exception), "unknown-test-apk-default-twelve-suite-not-recognized")
 
-    def simulated_run(self, fail_while_instrumenting):
+    def simulated_run(self, fail_while_instrumenting, avd=offline.OWNED_AVD):
         actions = []
         processes = []
         baseline = {"wifi": "1", "mobileData": "1", "airplane": "0", "ime": "1", "wifiApi": True,
@@ -118,13 +159,16 @@ class OfflineSmokeTests(unittest.TestCase):
                 return self.returncode
 
         class Device:
-            def __init__(self, _adb, _serial, deadline):
+            def __init__(self, _adb, _serial, deadline, avd=offline.OWNED_AVD):
                 self.prefix = ["/never-invoked", "-s", "emulator-5562"]
                 self.deadline = deadline
                 self.airplane = False
+                self.avd = avd
 
             def verify_owned(self):
                 actions.append(("verify-owned",))
+                return {"avd": self.avd, "pageSize": offline.OWNED_AVDS[self.avd],
+                        "is16kEnvironment": offline.OWNED_AVDS[self.avd] == 16384}
 
             def verify_package(self, *_args):
                 pass
@@ -158,11 +202,13 @@ class OfflineSmokeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "new"
             with patch.object(offline, "Device", Device), patch.object(offline, "local_artifacts", return_value={"appSha256": "a" * 64, "testsSha256": "b" * 64}), patch.object(offline.subprocess, "Popen", Process), contextlib.redirect_stdout(io.StringIO()):
-                code = offline.main(self.arguments(output))
+                code = offline.main(self.arguments(output) + ["--avd", avd])
             report = json.loads((output / "offline-smoke-summary.json").read_text())
         self.assertEqual(code, 1 if fail_while_instrumenting else 0)
         self.assertTrue(report["networkPreferencesRestored"] and report["originalDefaultTransportReconnected"] and report["imeUnchanged"])
         self.assertTrue(report["ownerStoppedAtCleanup"] and report["instrumentHandleTerminal"])
+        self.assertEqual((report["ownedAvd"], report["environment"]["pageSize"]), (avd, offline.OWNED_AVDS[avd]))
+        self.assertEqual(report["environment"]["is16kEnvironment"], offline.OWNED_AVDS[avd] == 16384)
         plane_restore = actions.index(("shell", "cmd", "connectivity", "airplane-mode", "disable"))
         self.assertEqual(actions[plane_restore + 1], ("shell", "cmd", "wifi", "set-wifi-enabled", "enabled"))
         self.assertTrue(any(action == ("stop-owner",) for action in actions[:plane_restore]))
@@ -178,6 +224,9 @@ class OfflineSmokeTests(unittest.TestCase):
     def test_failure_stops_owner_observes_same_handle_and_still_restores_network(self):
         actions, processes = self.simulated_run(True)
         self.assertIn(("wait-same-handle", id(processes[0])), actions)
+
+    def test_backup_four_k_run_reports_its_actual_environment(self):
+        self.simulated_run(False, "AtomCode_Backup_AOSP36_Arm64")
 
 
 if __name__ == "__main__":
