@@ -206,6 +206,11 @@ public class LocalRuntimeSmoke extends Instrumentation {
             old.setRequestProperty("Authorization", "Bearer " + firstToken);
             require(old.getResponseCode() == 401, "previous-run token must be rejected");
             old.disconnect();
+            android.app.ActivityManager manager = getTargetContext().getSystemService(android.app.ActivityManager.class);
+            boolean foreground = false;
+            for (android.app.ActivityManager.RunningServiceInfo service : manager.getRunningServices(100))
+                if (service.service.getClassName().equals(RuntimeService.class.getName()) && service.foreground) foreground = true;
+            require(foreground, "restarted runtime must retain its foreground service");
             pass("Restart, token rotation and workspace persistence");
             result.putString("stream", evidence.toString());
             finish(Activity.RESULT_OK, result);
