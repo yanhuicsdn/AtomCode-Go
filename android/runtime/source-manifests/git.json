@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "kind": "pinned-ubuntu-source-archive-subset",
+  "completeCorrespondingSourceDelivered": false,
+  "inventoryDependenciesSha256": "fd51913eb84c87b9e743ef0fc23cd29f2960fca9cb07fdb77eecb3165a28b9a4",
+  "package": "git",
+  "version": "1:2.43.0-1ubuntu7.4",
+  "descriptor": {
+    "name": "git_2.43.0-1ubuntu7.4.dsc",
+    "url": "https://archive.ubuntu.com/ubuntu/pool/main/g/git/git_2.43.0-1ubuntu7.4.dsc",
+    "bytes": 2968,
+    "sha256": "b00b55dcce31a063b783cd0e34fce02c24167fc9f32e2eb7bb2ff4a31652f7a5"
+  },
+  "signatureEnvelopePresent": true,
+  "signatureVerified": false,
+  "verificationScope": "exact inventory source/version and archive sizes/SHA-256 from HTTPS publisher descriptor; no independent OpenPGP authentication",
+  "files": [
+    {
+      "name": "git_2.43.0-1ubuntu7.4.debian.tar.xz",
+      "bytes": 796932,
+      "sha256": "da368dcd58b9889787e7448d907cfc7ac06536472f78421f91351eee71f6d74b",
+      "url": "https://archive.ubuntu.com/ubuntu/pool/main/g/git/git_2.43.0-1ubuntu7.4.debian.tar.xz"
+    },
+    {
+      "name": "git_2.43.0.orig.tar.xz",
+      "bytes": 7382996,
+      "sha256": "5446603e73d911781d259e565750dcd277a42836c8e392cac91cf137aa9b76ec",
+      "url": "https://archive.ubuntu.com/ubuntu/pool/main/g/git/git_2.43.0.orig.tar.xz"
+    }
+  ]
+}

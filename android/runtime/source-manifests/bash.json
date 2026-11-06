@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "kind": "pinned-ubuntu-source-archive-subset",
+  "completeCorrespondingSourceDelivered": false,
+  "inventoryDependenciesSha256": "fd51913eb84c87b9e743ef0fc23cd29f2960fca9cb07fdb77eecb3165a28b9a4",
+  "package": "bash",
+  "version": "5.2.21-2ubuntu4",
+  "descriptor": {
+    "name": "bash_5.2.21-2ubuntu4.dsc",
+    "url": "https://archive.ubuntu.com/ubuntu/pool/main/b/bash/bash_5.2.21-2ubuntu4.dsc",
+    "bytes": 2437,
+    "sha256": "d5a89c09f42c828d5e31dc3a1680882aa0ddaad5072963e563dec7dfc4919d33"
+  },
+  "signatureEnvelopePresent": true,
+  "signatureVerified": false,
+  "verificationScope": "exact inventory source/version and archive sizes/SHA-256 from HTTPS publisher descriptor; no independent OpenPGP authentication",
+  "files": [
+    {
+      "name": "bash_5.2.21-2ubuntu4.debian.tar.xz",
+      "bytes": 94124,
+      "sha256": "bdb10c18d167dda3b265cb3db75314d524edbf7794fed36f0fb0dcc32f5e6ac9",
+      "url": "https://archive.ubuntu.com/ubuntu/pool/main/b/bash/bash_5.2.21-2ubuntu4.debian.tar.xz"
+    },
+    {
+      "name": "bash_5.2.21.orig.tar.xz",
+      "bytes": 5598816,
+      "sha256": "ec21ab4efd6bd7a6e2802fbda622b81bfc43a8095d721234d4bf075797683014",
+      "url": "https://archive.ubuntu.com/ubuntu/pool/main/b/bash/bash_5.2.21.orig.tar.xz"
+    }
+  ]
+}
