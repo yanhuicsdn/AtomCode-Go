@@ -23,6 +23,16 @@ bash android/build-local.sh
 
 输出位于 `dist/android/`：调试 APK、设备测试 APK、SHA256SUMS、运行环境构建报告和依赖清单。`dist/`、本地工具链和大型运行环境均不提交到 Git。
 
+未设置 `SOURCE_DATE_EPOCH` 时，默认使用当前 Git 提交的时间戳。显式覆盖值必须仅含十进制数字且在无符号 64 位整数范围内；空值、负数、格式错误或溢出会终止构建。daemon 的构建脚本同时监听这个环境变量和 `webui/dist`，包括新增资产或首次出现的目录，使这些输入变化后增量构建会更新内嵌 WebUI。
+
+daemon 产物取自 Cargo metadata 返回的实际 `target_directory`，遵循 `CARGO_TARGET_DIR` 与 Cargo 配置，路径为 `<target_directory>/aarch64-unknown-linux-musl/release/atomcode-daemon`。独立执行 `python android/runtime/build.py` 时也默认使用同样的查找方式；可用 `--daemon /absolute/path/to/atomcode-daemon` 显式覆盖。
+
+daemon 编译后，脚本自动生成按 `aarch64-unknown-linux-musl` 过滤的完整 locked Cargo metadata，再运行 `android/runtime/notices.py`。APK 内包含 `assets/runtime/licenses/dependencies/index.json` 和保留原始字节的 `texts/<sha256>.txt`，完整 metadata 仅留在 Cargo target 目录。索引记录包名/版本、包内原相对路径、摘要及缺失文本。Cargo normal/build 依赖图是 workspace feature 合并后的超集；npm 范围为已安装的 lock 条目，包含开发依赖和字体，两者均不证明最终链接或 tree-shaking 后实际保留的集合。本机清单覆盖 290 个 Cargo 包、165 个已安装 npm 包、327 份去重原文，26 个包未找到包内许可文本（20 个 Cargo、6 个 npm）。仓库共享 MIT 许可单独记录，不抵消这些缺失项。这是许可原文清单，完整对应源码交付仍未完成。
+
+基线 `9ba42f01d` 已在同一宿主机的隔离源码目录、空生成产物条件下完成本地构建：首次 Ubuntu 下载摘要不符被拒绝，重新获取匹配原提交固定摘要的字节后继续成功，未修改固定摘要。该次基线本身没有进行逐字节相同的重建比较。
+
+随后源码 `2cebadbc0` 在外置 Cargo target 和运行环境输出均为空的条件下完成完整 driver，保留已校验的依赖缓存及已安装工具链：WebUI 402 项、Python 19 项和 JVM 31 项通过，Gradle 75 项任务全执行、无缓存命中。再在同一宿主、工具链和源码下固定 `SOURCE_DATE_EPOCH=1793982551`，改变 WebUI 文件系统时间后实际重编 daemon、重新生成 payload、执行 clean 且禁用缓存的 APK 组装，daemon、rootfs ZIP 和 APK 均逐字节相同。该证据覆盖这次受控的同宿主重复构建，不代表跨宿主或全新机器；精确摘要和设备验收范围见 [VERIFICATION.zh-CN.md](VERIFICATION.zh-CN.md)。
+
 ## 运行环境
 
 参考 dsh-Go `cf2f7c861e1098661a3a2039b3a4cb1633790102` 的本机运行路径，独立实现 Android 宿主。Ubuntu Base 24.04.5、Git/证书等 Ubuntu 依赖、Termux PRoot、talloc 和 android-shmem 的版本及摘要固定于 `android/runtime/dependencies.json`。参考版本的 PRoot 5.1.107.98 已从当前仓库移除，改用官方索引仍提供的 5.1.107.102，并核对官方构建配方中的源码摘要。
@@ -77,6 +87,7 @@ adb -s DEVICE shell am instrument -w \
 - 不保存 daemon 原始输出日志；避免模型凭据、命令参数和工具输出进入 Android 日志。模型失败通过现有 WebUI 呈现。
 - 前台服务不等于系统保证常驻。当前唤醒锁最多保持 30 分钟；Android 强制停止、后台限制和不同厂商行为仍需设备记录。
 - 原生 PRoot 组件 ELF LOAD 对齐为 16 KB。当前 APK 已在官方 API 36 ARM64 `google_apis_ps16k` revision 7 镜像通过 12 项本机运行检查，实际 `getconf PAGE_SIZE` 为 `16384`；此结果覆盖该模拟器配置，不代表全部 16 KB 设备。其余平台与覆盖范围见验收记录。
+- 同一 APK 在 Android 14/API 34 ARM64 真机（实测页大小 4096）完成同签名原位升级，独立 UID 7+2 项和隔离缓存存储 10 项通过；未清除应用数据、运行 UI 专项或改变屏幕/IME 设置，当前手机 UI 和真实模型仍未通过。
 - 公开分发前仍需完成第三方对应源码、构建配方与许可交付审核；仅有源代码 URL 不能替代适用许可证要求的完整对应源码。
 
 界面测试期间保持设备解锁，先关闭 Android 首次全屏提示；模拟器连接实体键盘时，测试屏幕键盘缩放前应启用屏幕键盘。
