@@ -20,15 +20,15 @@ AtomCode-Go 将 AtomCode 的 Rust 引擎和 WebUI 装进 Android 应用，参考
 
 ## 当前交付状态
 
-当前是开发测试版本，尚未完成全部兼容性验收。已在本地构建 ARM64 APK，并在 **Android 14 的 Up Mobile Mover Edition 真机**和 **ARM64 Android 16 模拟器**上验证本机启动、TLS/Cookie 认证、未认证请求拒绝、真实 Linux 终端命令、Git、文件编辑及重启后的数据保留。具体产物与未完成项见验收记录。
+当前是开发测试版本，全部最终验收尚未完成。当前 ARM64 候选包 `f67bbd8c…` 由源码 `bbec500c1` 在本机构建，已在**实测 4 KB 页的 AOSP Android 16 ARM64 模拟器**通过离线本机运行 12 项、上传适配器 7 项、独立 UID 7 项及宿主 2 项、活跃包 LocalTransport 备份拒绝，以及两份固定公开 PNG 的真实跨 UID 读取。在**官方 Android 16 ARM64 16 KB 模拟器**完成基线 `28b2a612…` 到当前候选包的真实提交前升级强杀，自动恢复后 12 项 smoke 通过；当前包额外的 16 KB 严格离线 12 项、独立 UID 7+2 和 chooser 7 组已通过；真实双 PNG 跨 UID FileReader/撤权也已通过；未在该 Google APIs 镜像测试备份。测试没有发送模型请求；拦截 picker 返回结果不证明实际 DocumentsUI 手选或模型附件上传。
 
-应用声明最低支持 Android 8.0/API 26，Android 8 真机及更多厂商仍未通过验收。当前 APK 已在一个官方 Android 16 ARM64 模拟器上以实测 16 KB 页大小运行，通过升级中断恢复和真实低空间预检；16 KB 真机及其他配置仍待测试。首版沿用参考项目的 `targetSdk 28` 私有目录执行方案，面向侧载，不属于可直接提交 Play Store 的发行包。
+**Android 14 的 Up Mobile Mover Edition 真机**仍为基线 APK `28b2a612…`，此前升级、安全和隔离存储通过记录保留为基线证据；当前 `f67bbd8c…` 候选包尚未安装到该手机或完成手机 UI 验收。应用声明最低支持 Android 8.0/API 26，Android 8 真机、更多厂商和 16 KB 真机仍未通过验收。首版沿用参考项目的 `targetSdk 28` 私有目录执行方案，面向侧载，不属于可直接提交 Play Store 的发行包。精确产物、失败和开放项见[验收记录](docs/android/VERIFICATION.zh-CN.md)。
 
 ### 模型认证限制
 
 **源码构建不含 AtomCode 官方 CodingPlan 所需的闭源请求签名器。AtomGit 登录成功，也不能因此使用官方 CodingPlan 模型。** 请在“模型配置”中添加自己的兼容模型服务和 API Key。界面会明确提示缺失的构建能力。官方模型支持需要实际的官方签名组件，开启空的 feature 无法获得该能力。
 
-真实模型端到端验收仍需使用受支持的模型服务完成。本机引擎测试通过，不等于真实模型调用通过。
+当前开发交付保留模型验收未通过状态。真实模型流式回复、模型驱动审批/取消及真实对话恢复仍需兼容服务和实际端到端验证；本机引擎测试通过，不等于真实模型调用通过。
 
 ## 本地构建
 

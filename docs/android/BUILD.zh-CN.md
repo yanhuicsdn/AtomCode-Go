@@ -8,7 +8,7 @@
 - Node.js 22.12.0 及以上、npm；使用仓库已有 `webui/package-lock.json` 执行 `npm ci`，构建脚本会在安装依赖前检查最低版本。
 - Python 3.9 以上。`android/runtime/requirements.txt` 固定本机交叉编译和 Debian 解压工具版本，安装在项目内 `.tools/python`。
 - JDK 17 以上；通过 `JAVA_HOME` 指定。系统默认 Java 8 不可用于 Android 构建。
-- Android SDK：platform 36、build-tools 36.0.0 或兼容版本。通过 `ANDROID_HOME` 或 `ANDROID_SDK_ROOT` 指定。
+- Android SDK：platform 36、build-tools 36.1.0 或兼容版本。通过 `ANDROID_HOME` 或 `ANDROID_SDK_ROOT` 指定。
 - Gradle 8.13 wrapper，分发包 SHA-256 已固定。Android Gradle Plugin 8.11.1。
 
 在仓库根目录执行：
@@ -33,7 +33,9 @@ daemon 编译后，脚本自动生成按 `aarch64-unknown-linux-musl` 过滤的�
 
 基线 `9ba42f01d` 已在同一宿主机的隔离源码目录、空生成产物条件下完成本地构建：首次 Ubuntu 下载摘要不符被拒绝，重新获取匹配原提交固定摘要的字节后继续成功，未修改固定摘要。该次基线本身没有进行逐字节相同的重建比较。
 
-随后源码 `2cebadbc0` 在外置 Cargo target 和运行环境输出均为空的条件下完成完整 driver，保留已校验的依赖缓存及已安装工具链：WebUI 402 项、Python 19 项和 JVM 31 项通过，Gradle 75 项任务全执行、无缓存命中。再在同一宿主、工具链和源码下固定 `SOURCE_DATE_EPOCH=1793982551`，改变 WebUI 文件系统时间后实际重编 daemon、重新生成 payload、执行 clean 且禁用缓存的 APK 组装，daemon、rootfs ZIP 和 APK 均逐字节相同。该证据覆盖这次受控的同宿主重复构建，不代表跨宿主或全新机器；精确摘要和设备验收范围见 [VERIFICATION.zh-CN.md](VERIFICATION.zh-CN.md)。
+当前候选源码 `bbec500c1` 固定 `SOURCE_DATE_EPOCH=1793993007` 完成完整本地 driver，使用已有产物的外置 Cargo target 和已校验依赖缓存：WebUI 402 项、Python 43 项、JVM 31 项通过，构建/lint 退出 0，Gradle 75 项任务全执行、无缓存命中；另有离线协调器宿主测试 15 项通过。暂存主包 `f67bbd8c…`、测试包 `313f0f49…`、运行环境 `atomcode-23286d8bafd6bc29`。在同宿主保持固定 payload 不变，clean 且禁用缓存的 APK 组装得到相同 APK SHA-256；该次没有重编 daemon/rootfs，不能当作三件重建或全新机器构建。精确摘要与范围见 [VERIFICATION.zh-CN.md](VERIFICATION.zh-CN.md)。
+
+基线源码 `2cebadbc0` 此前在空外置 Cargo target/运行环境输出、保留缓存和工具链条件下完成完整 driver：WebUI 402、Python 19、JVM 31 项通过，Gradle 75 项任务全执行；其同宿主固定 epoch `1793982551` 重建实际重新生成 daemon/rootfs/APK，三者均与基线 `28b2a612…` 逐字节相同。旧三件重建保持基线来源，不冒充候选包 `f67bbd8c…` 的重建。
 
 ## 运行环境
 
@@ -88,8 +90,8 @@ adb -s DEVICE shell am instrument -w \
 - 工作区导入生成新的 `imported-*` 项目，不覆盖已有文件；ZIP 上限 2 GB、10 万项。导出遇到符号链接或特殊文件明确失败，不能静默跳过。导入导出要求引擎停止。
 - 不保存 daemon 原始输出日志；避免模型凭据、命令参数和工具输出进入 Android 日志。模型失败通过现有 WebUI 呈现。
 - 前台服务不等于系统保证常驻。当前唤醒锁最多保持 30 分钟；Android 强制停止、后台限制和不同厂商行为仍需设备记录。
-- 原生 PRoot 组件 ELF LOAD 对齐为 16 KB。当前 APK 已在官方 API 36 ARM64 `google_apis_ps16k` revision 7 镜像通过 12 项本机运行检查，实际 `getconf PAGE_SIZE` 为 `16384`；此结果覆盖该模拟器配置，不代表全部 16 KB 设备。其余平台与覆盖范围见验收记录。
-- 同一 APK 在 Android 14/API 34 ARM64 真机（实测页大小 4096）完成同签名原位升级，独立 UID 7+2 项和隔离缓存存储 10 项通过；未清除应用数据、运行 UI 专项或改变屏幕/IME 设置，当前手机 UI 和真实模型仍未通过。
+- 原生 PRoot 组件 ELF LOAD 对齐为 16 KB，实际运行另行测量：当前候选 `f67bbd8c…` 在 `AtomCode_API36_16K_Arm64`（官方 API 36 ARM64 `google_apis_ps16k` revision 7，`getconf PAGE_SIZE=16384`）完成真实升级提交前强杀/自动恢复，随后 12 项 smoke 通过。当前候选额外的 16 KB 严格离线 12 项、独立 UID 7+2 和 chooser 7 组已通过；真实双 PNG FileReader/撤权也通过；未测试备份，不能扩大为全部 16 KB 设备。
+- 当前候选 `f67bbd8c…` 在 AOSP API 36 ARM64 `AtomCode_Backup_AOSP36_Arm64` 模拟器（实测 4096 字节页）通过严格离线 12 项、chooser 适配器 7 项、独立 UID 7+2、活跃包备份拒绝和真实固定 PNG FileReader 检查。Android 14/API 34 ARM64 真机仍为基线 `28b2a612…`；该手机的同签名升级、原生 7+2 和隔离缓存存储 10 项属于基线。当前候选未在手机安装或 UI 复测；真实模型仍未通过。
 - 公开分发前仍需完成第三方对应源码、构建配方与许可交付审核；仅有源代码 URL 不能替代适用许可证要求的完整对应源码。
 
 界面测试期间保持设备解锁，先关闭 Android 首次全屏提示；模拟器连接实体键盘时，测试屏幕键盘缩放前应启用屏幕键盘。
@@ -108,6 +110,20 @@ adb -s DEVICE shell am instrument -w -e storage true \
 
 测试在新建缓存目录中使用真实内置运行环境，结束后删除该目录。覆盖回调取消和注入零可用空间，不能将结果当作强制杀进程或实际磁盘写满的验收证据。
 
+真实断网的本机运行验证使用已安装匹配 APK、新输出目录和受限宿主协调器：
+
+```bash
+python3 android/tests/run_offline_smoke.py --serial emulator-5564 \
+  --avd AtomCode_Backup_AOSP36_Arm64 --adb "$ANDROID_HOME/platform-tools/adb" \
+  --apk /absolute/path/to/matching-product.apk \
+  --tests-apk /absolute/path/to/matching-tests.apk \
+  --output /tmp/atomcode-offline-new
+```
+
+仅允许该 4096 字节页 AVD 或 `AtomCode_API36_16K_Arm64` / 16384 字节页。协调器在默认 12 项期间实际确认没有 active/default/connected 网络，停止主包并恢复网络偏好与实际连接；不修改 mobile-data 偏好或 IME。仍需满足 UI 前提。AOSP 4 KB 候选包首次在 9 PASS 后因未确认系统首次全屏提示而键盘检查失败；正常点击“Got it”后，产品和严格 12 项断言均未改变而通过，两份记录均保留。
+
+可选 `-e file_chooser true` instrumentation 模式提供 7 项真实 Activity/WebView 适配器检查，选择结果为合成 content URI（`am instrument -w -r` 可取得明确 raw result）。真实跨 UID 字节读取另用独立 test-only [公开 PNG fixture](../../android/tests/fixtures/public-png-upload/README.md)，要求指定 AVD/实测页大小、同签名、新输出和 `--confirm-public-png-test`。它仅授权两个固定 70 字节公开 PNG，核对真实 DOM/FileReader 字节与同进程撤权，最后只清理已知 canary，不打入产品。两者都不代表 DocumentsUI 手选或模型上传验收。
+
 ### 真实低空间预检（仅我方模拟器）
 
 `run_real_space.py` 独立于注入空间测试。只允许已启动的 `AtomCode_API36_16K_Arm64` AVD 使用默认 userdata，先核对 `.ini` 路径、活动 qemu 的 backing 文件和所检查的宿主文件系统一致。保持已安装 App 与 `--apk` 匹配，另行构建、安装 `c5700c128` 或更新版本的设备测试 APK。协调器在 ADB 前拒绝手机序列号和缺少真实空间入口的旧测试 APK，随后核对精确白名单 AVD、16 KB 页和已安装产物摘要。输出目录须新建或为空：
@@ -123,7 +139,7 @@ python3 android/tests/run_real_space.py --serial emulator-5562 \
 
 fixture 是应用 **files** 下的唯一独立目录，使用普通 `File` 的真实 `getUsableSpace()`，不是缓存 fixture，也不覆写可用空间。限制保持为数据文件系统不超过 16 GiB、填充不超过 6 GiB/120 秒、客体至少保留 256 MiB、初始宿主余量至少 8 GiB；设备/宿主测试时限为 240/360 秒。顺序写入后同步并核对实际分配块；失败或超时先停止测试再只清理本次精确目录，不能计作通过，也不能自动重填。不安装生产 APK，不访问真实 home，不执行手机/UI/模型测试或改变设置。
 
-当前 `28b2a612...` App 与新 `9e1ddc61...` 测试包通过 5/5：写入 4,196,466,128 bytes、实际分配 4,196,474,880 bytes，可用空间 318,488,576 小于所需 335,266,352 bytes。空间错误发生于提取回调之前，旧 fixture 数据保留，释放填充后重装成功。清理 fixture 后客体可用空间与初值仅差 57,344 bytes，处于正常系统写入量级；保留的宿主 qcow2 有增长，不能声称宿主空间全部回收。证据和边界见[验收记录](VERIFICATION.zh-CN.md#真实低空间预检)。这不代表物理 NAND 耗尽、安装中途 ENOSPC 或真实用户 home 恢复通过。
+基线 `28b2a612...` App 与另行构建的 `9e1ddc61...` 测试包通过 5/5：写入 4,196,466,128 bytes、实际分配 4,196,474,880 bytes，可用空间 318,488,576 小于所需 335,266,352 bytes。空间错误发生于提取回调之前，旧 fixture 数据保留，释放填充后重装成功。清理 fixture 后客体可用空间与初值仅差 57,344 bytes，处于正常系统写入量级；保留的宿主 qcow2 有增长，不能声称宿主空间全部回收。证据和边界见[验收记录](VERIFICATION.zh-CN.md#真实低空间预检)。该基线 case 未在候选包 `f67bbd8c…` 重跑；不代表物理 NAND 耗尽、安装中途 ENOSPC 或真实用户 home 恢复通过。
 
 本地源码清单（`python android/runtime/source_inventory.py`）合并 Ubuntu Base 的包状态和经校验的额外 Debian 包控制元数据。当前内置环境有 117 个 Ubuntu 二进制包、82 组源码包/版本及 3 个 Termux 原生组件；`source-inventory.json` 记录对应源码获取页面并反映被覆盖的旧版本，但不等于完整对应源码交付。
 

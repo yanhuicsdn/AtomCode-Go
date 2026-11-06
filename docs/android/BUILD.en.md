@@ -8,7 +8,7 @@ Compilation, packaging and tests run locally. No GitHub Actions or remote build 
 - Node.js 22.12.0+ and npm; the committed WebUI lockfile is used by `npm ci`. The build script checks this minimum before installing dependencies.
 - Python 3.9+. Host tools are pinned in `android/runtime/requirements.txt` and installed into `.tools/python`.
 - JDK 17+, selected through `JAVA_HOME`; Java 8 cannot build this Android project.
-- Android SDK platform 36 and compatible build tools, selected through `ANDROID_HOME` or `ANDROID_SDK_ROOT`.
+- Android SDK platform 36 and build tools 36.1.0 or a compatible version, selected through `ANDROID_HOME` or `ANDROID_SDK_ROOT`.
 - The Gradle 8.13 wrapper verifies its distribution SHA-256; Android Gradle Plugin is pinned to 8.11.1.
 
 From the repository root:
@@ -33,7 +33,9 @@ After compiling the daemon, the script generates complete locked Cargo metadata 
 
 Baseline `9ba42f01d` completed a local build from an isolated source checkout with empty generated outputs on this same host. A mismatched Ubuntu download was first rejected; fetching bytes matching the original committed pin allowed the build to finish without changing that pin. That baseline alone did not establish a byte-identical rebuild.
 
-Source `2cebadbc0` subsequently completed the full driver with an empty external Cargo target and runtime output, retaining verified dependency caches and the installed toolchain: 402 WebUI, 19 Python and 31 JVM tests passed; all 75 Gradle tasks executed without cache hits. A second build on the same host/toolchain and source, with fixed `SOURCE_DATE_EPOCH=1793982551`, changed WebUI filesystem timestamps, actually recompiled the daemon, regenerated the payload and assembled a clean uncached APK. The daemon, rootfs ZIP and APK were byte-identical. This covers that controlled same-host repeat, not another host or a fresh machine; exact hashes and device-test scope are in [VERIFICATION.en.md](VERIFICATION.en.md).
+Current candidate source `bbec500c1` completed the full local driver with `SOURCE_DATE_EPOCH=1793993007`, using an already populated external Cargo target and verified dependency caches: 402 WebUI tests, 43 Python tests and 31 JVM tests passed; build/lint exited zero and all 75 Gradle tasks executed without cache hits. Fifteen separate offline-coordinator host tests passed. The staged APK is `f67bbd8c…`, test APK `313f0f49…`, runtime `atomcode-23286d8bafd6bc29`. A same-host clean uncached APK assembly using the unchanged pinned payload reproduced the APK SHA-256; daemon/rootfs were not rebuilt in that repeat. It is not a three-artifact repeat or a fresh-machine build. Exact hashes and scope are in [VERIFICATION.en.md](VERIFICATION.en.md).
+
+Baseline source `2cebadbc0` previously completed the driver from empty external Cargo target/runtime output with retained caches/toolchain: 402 WebUI, 19 Python and 31 JVM tests, all 75 Gradle tasks executed. Its controlled same-host fixed-epoch (`1793982551`) rebuild actually regenerated daemon/rootfs/APK, all byte-identical to baseline `28b2a612…`. That older three-artifact result is retained as baseline evidence and is not a rebuild of candidate `f67bbd8c…`.
 
 ## Runtime inputs and storage
 
@@ -96,9 +98,9 @@ ZIP workspace import/export is limited to 2 GB and 100,000 entries. Imports crea
 
 The default artifact is signed by the local Android debug keystore and is a development package. `assembleRelease` produces an unsigned artifact; it does not silently substitute the debug key. Production release requires a retained signing key, monotonic version codes and completed device/upgrade acceptance. Changing the signing key prevents an in-place APK upgrade; uninstalling deletes app data.
 
-Minimum SDK is 26, ARM64 only. Target SDK 28 follows the reference's private-executable strategy and is a sideloading constraint, not a Play Store-ready configuration. PRoot native ELF LOAD alignment is 16 KB. The current APK passed the 12-check local-runtime suite on the official API 36 ARM64 `google_apis_ps16k` revision 7 image, with actual `getconf PAGE_SIZE` returning `16384`; this establishes that emulator configuration, not every 16 KB device. See the verification record for scope and remaining platforms.
+Minimum SDK is 26, ARM64 only. Target SDK 28 follows the reference's private-executable strategy and is a sideloading constraint, not a Play Store-ready configuration. PRoot ELF LOAD alignment is 16 KB, but execution is measured separately: current candidate `f67bbd8c…` recovered from an actual pre-commit upgrade force-stop on `AtomCode_API36_16K_Arm64` (official API 36 ARM64 `google_apis_ps16k` revision 7; `getconf PAGE_SIZE=16384`) and then passed 12 smoke checks. Current-candidate 16 KB strict offline 12, independent-UID 7+2 and chooser seven groups also passed; the actual two-PNG FileReader/revocation checks also passed. No backup test was run there, and this does not establish all 16 KB devices.
 
-The same APK also passed a same-key in-place upgrade, independent-UID 7+2 checks and ten isolated cache-storage checks on the Android 14/API 34 ARM64 phone with measured 4096-byte pages. No app data was cleared, UI suite run or screen/IME setting changed; current phone UI and real-model acceptance remain unpassed.
+Current candidate `f67bbd8c…` also passed 12 strict offline smoke checks, seven chooser-adapter checks, independent-UID 7+2, active-package backup rejection and real fixed-PNG FileReader checks on the AOSP API 36 ARM64 `AtomCode_Backup_AOSP36_Arm64` emulator, measured 4096-byte pages. The physical Android 14/API 34 ARM64 phone still uses baseline `28b2a612…`; only that baseline passed same-key upgrade, native 7+2 and ten isolated cache-storage checks there. Candidate `f67bbd8c…` has not been installed or UI-tested on the phone. Real models remain unpassed.
 
 **Source builds do not contain the closed-source official CodingPlan request signer. AtomGit login alone does not enable official models.** Add your own compatible model account/API key in Model configuration. The current binary advertises its real signing capability and explains this limitation. The port does not implement or bypass that private signing protocol.
 
@@ -120,6 +122,20 @@ adb -s DEVICE shell am instrument -w -e storage true \
 
 This uses bundled runtime assets in a new cache directory and removes that directory afterward. It tests callback cancellation and injected zero usable space, not an abrupt process kill or physical disk exhaustion.
 
+For true offline local-runtime verification, use the guarded host coordinator with already installed matching APKs and a new output directory:
+
+```bash
+python3 android/tests/run_offline_smoke.py --serial emulator-5564 \
+  --avd AtomCode_Backup_AOSP36_Arm64 --adb "$ANDROID_HOME/platform-tools/adb" \
+  --apk /absolute/path/to/matching-product.apk \
+  --tests-apk /absolute/path/to/matching-tests.apk \
+  --output /tmp/atomcode-offline-new
+```
+
+It accepts only that 4096-byte AVD or `AtomCode_API36_16K_Arm64` / 16384-byte pages. It verifies no live active/default/connected network during the default 12 checks, stops the owner and restores actual network preferences/connection; it does not change the mobile-data preference or IME. UI prerequisites still apply. On the AOSP 4 KB candidate, an initial nine-PASS run failed at keyboard verification while Android's first-use fullscreen hint was unacknowledged. After the normal “Got it” action, the unchanged product and strict 12 assertions passed; both records are retained.
+
+The optional `-e file_chooser true` instrumentation mode gives seven Activity/WebView adapter checks with synthetic content selections (use `am instrument -w -r` for the explicit raw result). For actual cross-UID bytes, use the separate test-only [public-PNG fixture](../../android/tests/fixtures/public-png-upload/README.md), with its named-AVD/page guard, matching signatures, fresh output and `--confirm-public-png-test`. It grants only two fixed 70-byte public PNGs, validates real DOM/FileReader bytes and same-process revocation, then removes only known canaries. It is never bundled into the product. These are not manual DocumentsUI or model-upload tests.
+
 ### Real low-space preflight (owned emulator only)
 
 `run_real_space.py` is separate from the injected-space suite. Use only the already running `AtomCode_API36_16K_Arm64` AVD with default userdata, after verifying its `.ini` path and active qemu backing files are on the checked host filesystem. Keep the installed app matching `--apk`; build and install the updated device-test APK from `c5700c128` or later. The coordinator rejects phone serials and old test APKs without the real-space entry before ADB, then verifies the exact owned AVD, 16 KB pages and installed artifact hashes. Use a new/empty output directory:
@@ -135,7 +151,7 @@ python3 android/tests/run_real_space.py --serial emulator-5562 \
 
 The fixture is a unique child of app **files**, using an ordinary `File` and real `getUsableSpace()`, not a cache fixture or overridden space value. Limits remain at most a 16 GiB data filesystem, 6 GiB filler, 120 seconds filling, at least 256 MiB guest reserve, and at least 8 GiB initial host headroom. Device/host test deadlines are 240/360 seconds. Sequential writes are synced and allocated blocks are checked; failure/timeout cleanup stops the test before removing only its exact fixture, and is not counted as a pass. Do not automatically retry a failed/timed-out fill. No production APK install, real-home access, phone/UI/model test or settings change is performed.
 
-The current `28b2a612...` app with new `9e1ddc61...` tests passed 5/5: 4,196,466,128 bytes written, 4,196,474,880 allocated, and actual available space 318,488,576 below required 335,266,352 bytes. The space error occurred before any extraction callback; old fixture data stayed intact, then installation succeeded after filler release. Guest fixture cleanup restored available space within 57,344 bytes of the initial reading, consistent with normal system activity; the retained host qcow2 grew, so host free space was not fully reclaimed. See [verification](VERIFICATION.en.md#real-low-space-preflight) for evidence and scope. This does not establish physical NAND exhaustion, mid-install ENOSPC or real-user-home recovery.
+Baseline `28b2a612...` app with separately built `9e1ddc61...` tests passed 5/5: 4,196,466,128 bytes written, 4,196,474,880 allocated, and actual available space 318,488,576 below required 335,266,352 bytes. The space error occurred before any extraction callback; old fixture data stayed intact, then installation succeeded after filler release. Guest fixture cleanup restored available space within 57,344 bytes of the initial reading, consistent with normal system activity; the retained host qcow2 grew, so host free space was not fully reclaimed. See [verification](VERIFICATION.en.md#real-low-space-preflight) for evidence and scope. This baseline case was not rerun with candidate `f67bbd8c…`. It does not establish physical NAND exhaustion, mid-install ENOSPC or real-user-home recovery.
 
 The local source inventory (`python android/runtime/source_inventory.py`) merges Ubuntu Base status with verified overlaid Debian control metadata. The current payload contains 117 Ubuntu binaries from 82 source/version pairs and three Termux natives. `source-inventory.json` records those source acquisition pages and replaces stale Base package versions; it is not the complete corresponding-source distribution.
 

@@ -1,6 +1,6 @@
 # AtomCode-Go source and notice materials
 
-The verified APK remains `28b2a612…` from source `2cebadbc0`. Its original 327-text dependency-notice index is unchanged. The source/notice materials below are separate additions; they have not rebuilt or replaced that APK. Runtime, device UI and real-model limits remain in [VERIFICATION.en.md](VERIFICATION.en.md).
+Current candidate APK `f67bbd8c…` was built from source `bbec500c1`. It retains the original 327-text dependency-notice index: the inventory still has 26 missing per-package texts (20 Cargo, six npm). Baseline `28b2a612…` / `2cebadbc0` remains separate. The source/notice materials below are separate supplements, not injected into the APK notice index; ten resolved external notice versions and three unresolved versions do not clear those original 26 entries. Runtime, phone UI and real-model limits are in [VERIFICATION.en.md](VERIFICATION.en.md).
 
 ## Supplemental original notices
 
@@ -35,7 +35,7 @@ python3 android/runtime/source_archives.py fetch \
 
 For Bash, run the same command with only `--manifest android/runtime/source-manifests/bash.json`. `plan` also accepts `--version` to select an exact inventory version. This matters for the current OpenSSL entries, `3.0.13-0ubuntu3.15` and `3.0.13-0ubuntu3.16`. Receipts use `<package>-<sha256(version)>-source-receipt.json`, so versions do not overwrite one another; neither OpenSSL subset has been acquired by this pilot.
 
-Recorded archive sizes and SHA-256 match the pinned descriptors. A PGP signature envelope is present, but `signatureVerified` remains **false**: checksum consistency and independent OpenPGP authentication are separate results. These two source/version pairs cover **2 of 82** Ubuntu inventory pairs, not complete corresponding-source delivery; `completeCorrespondingSourceDelivered` remains false.
+Recorded archive sizes and SHA-256 match the pinned descriptors. A PGP signature envelope is present, but `signatureVerified` remains **false**: checksum consistency and independent OpenPGP authentication are separate results. These two source/version pairs cover **2 of 82** Ubuntu inventory pairs; separately acquired three native upstream archives and the Termux framework do not complete the whole product's corresponding-source set; `completeCorrespondingSourceDelivered` remains false.
 
 ## npm artifact pins
 
@@ -47,7 +47,7 @@ Current `webui/package-lock.json` SHA-256:
 9f77410695db6bf9bc52b2a74d17c96e389fb5bbe8b1298109472f20a6523db1
 ```
 
-After the pin update, WebUI build/typecheck and 402 tests passed; all 94 generated files had the same SHA-256 as before. This is WebUI output comparison, not a newly compiled APK. The offline `python3 android/runtime/verify_frontend_lock.py` preflight now accepts 178 pinned entries plus one bundled child. `build-local.sh` runs it before downloads or compilation. The real older `2ce` lock was rejected; a driver fixture confirmed that rejection created no venv and executed no build tools. Eight checker tests passed. These artifact pins and the source pilot do not change model availability or establish complete product source delivery.
+After the pin update, WebUI build/typecheck and 402 tests passed; all 94 generated files had the same SHA-256 as before. That lock-update step compared WebUI outputs only; the current f67 APK was subsequently compiled using this pinned lock, as separately recorded in verification. The offline `python3 android/runtime/verify_frontend_lock.py` preflight now accepts 178 pinned entries plus one bundled child. `build-local.sh` runs it before downloads or compilation. The real older `2ce` lock was rejected; a driver fixture confirmed that rejection created no venv and executed no build tools. Eight checker tests passed. These artifact pins and the source pilot do not change model availability or establish complete product source delivery.
 
 ## Native dependency source materials
 

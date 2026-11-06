@@ -20,15 +20,15 @@ No root, Termux, computer or remote AtomCode server is required for normal use a
 
 ## Current delivery status
 
-This is a development build, not a completed compatibility certification. A local ARM64 APK has been built and tested on an **Up Mobile Mover Edition running Android 14** and an **ARM64 Android 16 emulator**. Local startup, TLS/cookie authentication, rejected unauthenticated requests, real Linux terminal commands, Git, file edits and restart persistence have been exercised. See the verification records for the exact artifact and outstanding checks.
+This is a development build; final acceptance remains incomplete. The current ARM64 candidate `f67bbd8c…` was built locally from `bbec500c1` and tested on an **AOSP Android 16 ARM64 emulator with measured 4 KB pages**: 12 offline local-runtime checks, seven upload-adapter checks, seven independent-UID plus two owner checks, active-package LocalTransport backup rejection, and real cross-UID reads of two fixed public PNGs passed. On the **official Android 16 ARM64 16 KB emulator**, a real pre-commit upgrade force-stop from baseline `28b2a612…` to this candidate recovered automatically and passed 12 smoke checks. Additional current-candidate 16 KB offline 12, independent-UID 7+2 and chooser seven groups passed; the real two-PNG cross-UID FileReader/revocation case also passed. Backup was not tested on this Google APIs image. These tests send no model requests; picker interception does not prove manual DocumentsUI selection or model attachment upload.
 
-The app declares Android 8.0/API 26 as its minimum; Android 8 hardware and additional vendors remain unaccepted. The current APK has run on one official Android 16 ARM64 emulator with measured 16 KB pages, including upgrade interruption/recovery and real low-space preflight checks. Physical 16 KB devices and other configurations still require testing. The reference's `targetSdk 28` execution strategy is used for sideloading; this is not a Play Store release.
+The physical **Up Mobile Mover Edition / Android 14** still has baseline APK `28b2a612…`; its prior upgrade, security and isolated-storage passes are retained as baseline evidence. The current `f67bbd8c…` candidate has not been installed or UI-tested on that phone. The app declares Android 8.0/API 26 as its minimum; Android 8 hardware, more vendors and physical 16 KB devices remain unaccepted. The reference's `targetSdk 28` execution strategy is used for sideloading; this is not a Play Store release. Exact artifacts, failures and remaining checks are in [the verification record](docs/android/VERIFICATION.en.md).
 
 ### Model authentication limitation
 
 **A source build does not contain AtomCode's closed-source official CodingPlan request signer. AtomGit login alone cannot enable official CodingPlan models.** Configure your own compatible model provider and API key in Model configuration. The UI reports the missing build capability. Official-model support requires the actual official signing component; enabling an empty feature flag cannot provide it.
 
-Real-model end-to-end acceptance remains outstanding until a supported model service is configured and tested. Successful local engine tests do not imply successful model inference.
+Model acceptance remains explicitly unpassed in this development delivery. Real-model streaming, model-driven approval/cancellation and real-conversation resume require a compatible service and actual end-to-end verification; successful local-engine tests do not imply successful model inference.
 
 ## Build locally
 

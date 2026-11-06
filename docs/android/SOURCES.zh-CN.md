@@ -1,6 +1,6 @@
 # AtomCode-Go 源码与许可资料
 
-已验证 APK 仍为源码 `2cebadbc0` 构建的 `28b2a612…`，内含原有 327 份依赖许可原文的索引保持不变。下述源码/许可资料是独立补充，没有重新编译或替换该 APK。运行环境、手机 UI 和真实模型等限制见 [VERIFICATION.zh-CN.md](VERIFICATION.zh-CN.md)。
+当前候选 APK `f67bbd8c…` 由源码 `bbec500c1` 构建，保留原有 327 份依赖许可原文的索引，包内缺失计数仍为 26 项（20 Cargo、6 npm）。基线 `28b2a612…` / `2cebadbc0` 单独保留。下述源码/许可材料为分离补充，未注入 APK 原文索引；10 个外部版本取得原文、3 个未解决不抵消原有 26 项缺失。运行环境、手机 UI 和真实模型限制见 [VERIFICATION.zh-CN.md](VERIFICATION.zh-CN.md)。
 
 ## 许可原文补充资料
 
@@ -35,7 +35,7 @@ python3 android/runtime/source_archives.py fetch \
 
 Bash 使用相同命令，仅把参数替换为 `--manifest android/runtime/source-manifests/bash.json`。`plan` 还可用 `--version` 选择清单中的精确版本，适用于当前 OpenSSL 同时存在的 `3.0.13-0ubuntu3.15`、`3.0.13-0ubuntu3.16`。收据名称为 `<package>-<sha256(version)>-source-receipt.json`，不同版本不会互相覆盖；本试点尚未取得任一 OpenSSL 源码组。
 
-记录的归档大小和 SHA-256 与固定描述文件一致。描述文件含 PGP 签名封装，但 `signatureVerified` 仍为 **false**：摘要一致与独立 OpenPGP 认证是不同结果。当前两组仅覆盖 Ubuntu 清单 82 组源码包/版本中的 **2/82**，不是完整对应源码交付，`completeCorrespondingSourceDelivered` 仍为 false。
+记录的归档大小和 SHA-256 与固定描述文件一致。描述文件含 PGP 签名封装，但 `signatureVerified` 仍为 **false**：摘要一致与独立 OpenPGP 认证是不同结果。当前两组仅覆盖 Ubuntu 清单 82 组源码包/版本中的 **2/82**；另行取得的 3 个原生上游归档和 Termux 框架也不补齐整个产品的对应源码集合，`completeCorrespondingSourceDelivered` 仍为 false。
 
 ## npm 产物固定
 
@@ -47,7 +47,7 @@ WebUI 锁已为此前缺失的 138 个独立条目补齐 `resolved` 和 SRI。�
 9f77410695db6bf9bc52b2a74d17c96e389fb5bbe8b1298109472f20a6523db1
 ```
 
-补 pin 后 WebUI 构建、类型检查和 402 项测试通过，94 个生成文件的 SHA-256 均与此前相同。这是 WebUI 输出比较，没有重新编译 APK。离线命令 `python3 android/runtime/verify_frontend_lock.py` 已验证 178 个带摘要条目和 1 个 bundled 子包；`build-local.sh` 在下载或编译前执行它。真实旧 `2ce` 锁被拒绝，driver 测试确认拒绝前没有创建 venv 或运行构建工具，8 项检查器测试通过。产物 pin 与源码试点不改变模型可用性，也不证明完整产品源码交付。
+补 pin 后 WebUI 构建、类型检查和 402 项测试通过，94 个生成文件的 SHA-256 均与此前相同。该次锁更新步骤仅比较 WebUI 输出；当前 f67 APK 随后使用该固定锁实际编译，来源在验收记录单独列出。离线命令 `python3 android/runtime/verify_frontend_lock.py` 已验证 178 个带摘要条目和 1 个 bundled 子包；`build-local.sh` 在下载或编译前执行它。真实旧 `2ce` 锁被拒绝，driver 测试确认拒绝前没有创建 venv 或运行构建工具，8 项检查器测试通过。产物 pin 与源码试点不改变模型可用性，也不证明完整产品源码交付。
 
 ## 原生依赖源码资料
 
