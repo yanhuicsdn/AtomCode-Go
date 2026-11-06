@@ -54,6 +54,7 @@ public final class RuntimeController {
     public String origin() { LocalGateway value = gateway; return phase == Phase.RUNNING && value != null ? value.origin : null; }
     public byte[] certificate() { LocalGateway value = gateway; return value == null ? null : value.certificate.clone(); }
     public String gatewayFailure() { LocalGateway value = gateway; return value == null ? null : value.lastFailure; }
+    public String processInspection() { return OwnedProcesses.diagnostic(); }
     public String entryUrl() { String base = origin(); return base == null || token == null ? null : base + "/?token=" + token; }
     public boolean busy() { return phase == Phase.INSTALLING || phase == Phase.STARTING || phase == Phase.STOPPING || phase == Phase.TRANSFERRING; }
     public boolean shouldAutoStart() { return phase == Phase.STOPPED && !userStopped; }
@@ -137,11 +138,16 @@ public final class RuntimeController {
                     "--cwd=/root/workspace", "-b", "/dev", "-b", "/proc", "-b", "/sys",
                     "-b", "/dev/urandom:/dev/random", "-b", "/proc/self/fd:/dev/fd",
                     "-b", installer.home() + ":/root", "-b", run + ":/run/atomcode",
-                    "/usr/bin/env", "-i", "HOME=/root", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+                    // The outer environment is already allowlisted below.
+                    // Strip only host-loader variables, preserving the private
+                    // daemon token without placing it in long-lived argv.
+                    "/usr/bin/env", "-u", "ANDROID_ROOT", "-u", "ANDROID_DATA", "-u", "LD_LIBRARY_PATH",
+                    "-u", "PROOT_TMP_DIR", "-u", "PROOT_LOADER", "-u", "PROOT_L2S_DIR",
+                    "HOME=/root", "PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
                     "LANG=C.UTF-8", "TERM=xterm-256color", "TMPDIR=/tmp", "SHELL=/bin/bash",
                     "SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt", "GIT_SSL_CAINFO=/etc/ssl/certs/ca-certificates.crt",
                     "ATOMCODE_HOME=/root/.atomcode", "ATOMCODE_ANDROID_RUNTIME=" + marker,
-                    "ATOMCODE_DAEMON_TOKEN=" + token, "RUST_LOG=error",
+                    "RUST_LOG=error",
                     "/usr/local/bin/atomcode-daemon", "--host", "127.0.0.1", "--port", Integer.toString(local.port()),
                     "--unix-socket", "/run/atomcode/s.sock", "--client", "webui", "--no-telemetry", "--idle-timeout", "0"));
             ProcessBuilder builder = new ProcessBuilder(args).directory(context.getFilesDir()).redirectErrorStream(true);
@@ -158,6 +164,7 @@ public final class RuntimeController {
             Files.createDirectories(installer.home().resolve(".l2s"));
             env.put("LD_LIBRARY_PATH", nativeDir);
             env.put("ATOMCODE_ANDROID_RUNTIME", marker);
+            env.put("ATOMCODE_DAEMON_TOKEN", token);
             state(Phase.STARTING, "正在启动手机本机引擎");
             Process launched;
             synchronized (this) {

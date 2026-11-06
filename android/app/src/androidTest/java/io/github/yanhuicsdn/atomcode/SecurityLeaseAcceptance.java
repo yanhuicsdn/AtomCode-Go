@@ -99,5 +99,29 @@ final class SecurityLeaseAcceptance {
             String response = RuntimeManifest.readText(socket.getInputStream(), 65536);
             LocalRuntimeSmoke.require(response.startsWith("HTTP/1.1 200 "), "owner socket must be alive");
         }
+        boolean markerParentFound = false;
+        String markerArgument = "ATOMCODE_ANDROID_RUNTIME=" + host.getTargetContext().getFilesDir().getCanonicalPath();
+        String expectedParent = host.getTargetContext().getApplicationInfo().nativeLibraryDir + "/libproot.so";
+        java.io.File[] processes = new java.io.File("/proc").listFiles();
+        LocalRuntimeSmoke.require(processes != null, "owner process inspection must be available");
+        for (java.io.File directory : processes) {
+            if (!directory.getName().matches("[0-9]+")) continue;
+            try {
+                if (android.system.Os.stat(directory.toString()).st_uid != android.os.Process.myUid()) continue;
+                String command = new String(Files.readAllBytes(directory.toPath().resolve("cmdline")), StandardCharsets.UTF_8);
+                if (!command.split("\0", 2)[0].equals(expectedParent) || !command.contains(markerArgument)) continue;
+                markerParentFound = true;
+                LocalRuntimeSmoke.require(!command.contains("ATOMCODE_DAEMON_TOKEN="), "daemon credential must not be present in long-lived process arguments");
+            } catch (java.io.FileNotFoundException | java.nio.file.NoSuchFileException | java.nio.file.AccessDeniedException unavailableEntry) {
+                // This read-only assertion does not infer process death or kill
+                // anything. A positive inspection of the actual parent below
+                // is still mandatory; unrelated inaccessible entries add no proof.
+            } catch (android.system.ErrnoException notInspectable) {
+                if (notInspectable.errno != android.system.OsConstants.ENOENT
+                        && notInspectable.errno != android.system.OsConstants.ESRCH
+                        && notInspectable.errno != android.system.OsConstants.EACCES) throw notInspectable;
+            }
+        }
+        LocalRuntimeSmoke.require(markerParentFound, "the live marked runtime parent must have been inspected");
     }
 }

@@ -234,6 +234,7 @@ public class LocalRuntimeSmoke extends Instrumentation {
                 causes.append(cause.getClass().getSimpleName()).append('\n');
             result.putString("stream", evidence + "FAIL: " + failure.getClass().getSimpleName() + (failure instanceof VerificationFailure ? ": " + failure.getMessage() : "") + "\n" + causes
                     + "\nGateway: " + (controller == null ? "not started" : controller.gatewayFailure())
+                    + "\nProcess inspection: " + (controller == null ? "not started" : controller.processInspection())
                     + "\nRuntime: " + (controller == null ? "not started" : controller.phase + ": " + controller.message) + "\n");
             finish(Activity.RESULT_CANCELED, result);
         }

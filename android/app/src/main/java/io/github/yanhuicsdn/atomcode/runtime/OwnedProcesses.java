@@ -13,61 +13,82 @@ import java.util.List;
 
 /** Only same-UID processes carrying our exact inherited runtime marker. */
 final class OwnedProcesses {
-    private record Identity(int pid, String started, boolean proot) {}
+    private static volatile String lastDiagnostic = "stage=none;exception=none;errno=0;gone=false;zombie=false;identityChanged=false";
+    static String diagnostic() { return lastDiagnostic; }
 
-    private static String startTime(Path process) throws IOException {
-        String stat = new String(Files.readAllBytes(process.resolve("stat")), StandardCharsets.UTF_8);
-        String[] fields = stat.substring(stat.lastIndexOf(") ") + 2).trim().split(" +");
-        if (fields.length < 20) throw new IOException("进程身份读取失败");
-        return fields[19];
+    private static Path path(int pid, String member) { return new File("/proc/" + pid + "/" + member).toPath(); }
+
+    private static ProcessOwnership.Failure memberFailure(ProcessOwnership.Stage stage, IOException error) {
+        int errno = error instanceof java.nio.file.NoSuchFileException ? OsConstants.ENOENT
+                : error instanceof java.nio.file.AccessDeniedException ? OsConstants.EACCES : 0;
+        // A missing member alone is not proof that its process directory is gone.
+        return new ProcessOwnership.Failure(stage, error, errno, false);
     }
 
-    private static List<Identity> scan(String marker) throws IOException {
-        File[] processes = new File("/proc").listFiles();
-        if (processes == null) throw new IOException("无法检查本机引擎进程");
-        List<Identity> result = new ArrayList<>();
-        for (File directory : processes) {
-            if (!directory.getName().matches("[0-9]+")) continue;
-            int pid;
-            try { pid = Integer.parseInt(directory.getName()); } catch (NumberFormatException ignored) { continue; }
-            if (pid == Process.myPid()) continue;
-            try {
-                if (Os.stat(directory.toString()).st_uid != Process.myUid()) continue;
-                String identity = startTime(directory.toPath());
-                String env = new String(Files.readAllBytes(directory.toPath().resolve("environ")), StandardCharsets.UTF_8);
-                boolean ours = false;
-                for (String item : env.split("\0")) if (item.equals("ATOMCODE_ANDROID_RUNTIME=" + marker)) ours = true;
-                if (!ours) continue;
-                String command = new String(Files.readAllBytes(directory.toPath().resolve("cmdline")), StandardCharsets.UTF_8);
-                String first = command.split("\0", 2)[0];
-                result.add(new Identity(pid, identity, first.endsWith("/libproot.so")));
-            } catch (android.system.ErrnoException | IOException error) {
-                if (directory.exists()) throw new IOException("不能确认旧引擎是否已退出，请停止应用后重试", error);
+    private static final class ProcAccess implements ProcessOwnership.Access {
+        @Override public int uid(int pid) throws ProcessOwnership.Failure {
+            try { return Os.stat("/proc/" + pid).st_uid; }
+            catch (android.system.ErrnoException error) {
+                boolean gone = error.errno == OsConstants.ENOENT || error.errno == OsConstants.ESRCH;
+                throw new ProcessOwnership.Failure(ProcessOwnership.Stage.UID, error, error.errno, gone);
             }
         }
-        return result;
+        @Override public ProcessOwnership.Stat stat(int pid) throws ProcessOwnership.Failure {
+            try { return ProcessOwnership.parseStat(new String(Files.readAllBytes(path(pid, "stat")), StandardCharsets.UTF_8)); }
+            catch (IOException error) { throw memberFailure(ProcessOwnership.Stage.STAT, error); }
+        }
+        @Override public byte[] environ(int pid) throws ProcessOwnership.Failure {
+            try { return Files.readAllBytes(path(pid, "environ")); }
+            catch (IOException error) { throw memberFailure(ProcessOwnership.Stage.ENVIRON, error); }
+        }
+        @Override public boolean proot(int pid) throws ProcessOwnership.Failure {
+            try {
+                String command = new String(Files.readAllBytes(path(pid, "cmdline")), StandardCharsets.UTF_8);
+                return command.split("\0", 2)[0].endsWith("/libproot.so");
+            } catch (IOException error) { throw memberFailure(ProcessOwnership.Stage.CMDLINE, error); }
+        }
+        @Override public void signal(int pid, int signal) throws ProcessOwnership.Failure {
+            try { Os.kill(pid, signal); }
+            catch (android.system.ErrnoException error) {
+                throw new ProcessOwnership.Failure(ProcessOwnership.Stage.SIGNAL, error, error.errno,
+                        error.errno == OsConstants.ESRCH);
+            }
+        }
+        @Override public void pause(long milliseconds) throws InterruptedException { Thread.sleep(milliseconds); }
     }
 
-    private static void signal(Identity identity, int signal) throws IOException {
-        Path path = new File("/proc/" + identity.pid).toPath();
-        try {
-            if (Os.stat(path.toString()).st_uid == Process.myUid() && startTime(path).equals(identity.started))
-                Os.kill(identity.pid, signal);
-        } catch (android.system.ErrnoException | IOException error) {
-            if (Files.exists(path)) throw new IOException("停止旧引擎失败", error);
+    private static List<ProcessOwnership.Identity> scan(ProcessOwnership ownership, String marker) throws IOException, InterruptedException {
+        for (int attempt = 0; attempt < 4; attempt++) {
+            File[] processes = new File("/proc").listFiles();
+            if (processes != null) {
+                List<Integer> listed = new ArrayList<>();
+                for (File directory : processes) {
+                    if (!directory.getName().matches("[0-9]+")) continue;
+                    try {
+                        int pid = Integer.parseInt(directory.getName());
+                        if (pid != Process.myPid()) listed.add(pid);
+                    } catch (NumberFormatException ignored) {}
+                }
+                return ownership.scan(listed, marker);
+            }
+            ownership.report(new ProcessOwnership.Failure(ProcessOwnership.Stage.LIST, new IOException(), 0, false));
+            if (attempt < 3) Thread.sleep(25L * (attempt + 1));
         }
+        throw new IOException("无法检查本机引擎进程");
     }
 
     static void stopAll(String marker) throws IOException, InterruptedException {
-        List<Identity> first = scan(marker);
-        for (Identity identity : first) if (identity.proot) signal(identity, OsConstants.SIGQUIT);
+        lastDiagnostic = "stage=none;exception=none;errno=0;gone=false;zombie=false;identityChanged=false";
+        ProcessOwnership ownership = new ProcessOwnership(Process.myUid(), new ProcAccess(), value -> lastDiagnostic = value);
+        List<ProcessOwnership.Identity> first = scan(ownership, marker);
+        for (ProcessOwnership.Identity identity : first) if (identity.proot()) ownership.signal(identity, OsConstants.SIGQUIT);
         if (!first.isEmpty()) Thread.sleep(250);
         for (int pass = 0; pass < 5; pass++) {
-            List<Identity> remaining = scan(marker);
+            List<ProcessOwnership.Identity> remaining = scan(ownership, marker);
             if (remaining.isEmpty()) return;
-            for (Identity identity : remaining) signal(identity, OsConstants.SIGKILL);
+            for (ProcessOwnership.Identity identity : remaining) ownership.signal(identity, OsConstants.SIGKILL);
             Thread.sleep(100);
         }
-        if (!scan(marker).isEmpty()) throw new IOException("旧引擎进程仍在运行，未启动新的引擎");
+        if (!scan(ownership, marker).isEmpty()) throw new IOException("旧引擎进程仍在运行，未启动新的引擎");
     }
 }
