@@ -22,7 +22,7 @@ No root, Termux, computer or remote AtomCode server is required for normal use a
 
 This is a development build, not a completed compatibility certification. A local ARM64 APK has been built and tested on an **Up Mobile Mover Edition running Android 14** and an **ARM64 Android 16 emulator**. Local startup, TLS/cookie authentication, rejected unauthenticated requests, real Linux terminal commands, Git, file edits and restart persistence have been exercised. See the verification records for the exact artifact and outstanding checks.
 
-The app declares Android 8.0/API 26 as its minimum, but Android 8 hardware, additional vendors and 16 KB page-size devices still require acceptance testing. The reference's `targetSdk 28` execution strategy is used for sideloading; this is not a Play Store release.
+The app declares Android 8.0/API 26 as its minimum; Android 8 hardware and additional vendors remain unaccepted. The current APK has run on one official Android 16 ARM64 emulator with measured 16 KB pages, including upgrade interruption/recovery and real low-space preflight checks. Physical 16 KB devices and other configurations still require testing. The reference's `targetSdk 28` execution strategy is used for sideloading; this is not a Play Store release.
 
 ### Model authentication limitation
 

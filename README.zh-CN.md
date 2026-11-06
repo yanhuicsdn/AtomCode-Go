@@ -22,7 +22,7 @@ AtomCode-Go 将 AtomCode 的 Rust 引擎和 WebUI 装进 Android 应用，参考
 
 当前是开发测试版本，尚未完成全部兼容性验收。已在本地构建 ARM64 APK，并在 **Android 14 的 Up Mobile Mover Edition 真机**和 **ARM64 Android 16 模拟器**上验证本机启动、TLS/Cookie 认证、未认证请求拒绝、真实 Linux 终端命令、Git、文件编辑及重启后的数据保留。具体产物与未完成项见验收记录。
 
-应用声明最低支持 Android 8.0/API 26，但 Android 8 真机、更多厂商及 16 KB 页大小设备仍待测试。首版沿用参考项目的 `targetSdk 28` 私有目录执行方案，面向侧载，不属于可直接提交 Play Store 的发行包。
+应用声明最低支持 Android 8.0/API 26，Android 8 真机及更多厂商仍未通过验收。当前 APK 已在一个官方 Android 16 ARM64 模拟器上以实测 16 KB 页大小运行，通过升级中断恢复和真实低空间预检；16 KB 真机及其他配置仍待测试。首版沿用参考项目的 `targetSdk 28` 私有目录执行方案，面向侧载，不属于可直接提交 Play Store 的发行包。
 
 ### 模型认证限制
 
