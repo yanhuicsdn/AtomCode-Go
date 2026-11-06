@@ -1,0 +1,17 @@
+plugins { id 'com.android.application' }
+android {
+    namespace 'io.github.yanhuicsdn.atomcode.uploadfixture'
+    compileSdk 36
+    buildToolsVersion '36.1.0'
+    defaultConfig {
+        applicationId 'io.github.yanhuicsdn.atomcode.uploadfixture'
+        minSdk 26
+        targetSdk 28
+        versionCode 1
+        versionName '1.0-test-only'
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    // Explicit target-28 sideload-only test fixture, never a Play distribution.
+    lint { disable 'ExpiredTargetSdkVersion' }
+}
+androidComponents { beforeVariants(selector().withBuildType('release')) { variant -> variant.enable = false } }

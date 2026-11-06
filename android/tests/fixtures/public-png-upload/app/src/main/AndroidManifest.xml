@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Deliberately no network, storage or other uses-permission entries. -->
+    <application android:label="Public PNG upload fixture" android:testOnly="true"
+        android:allowBackup="false" android:fullBackupContent="false" android:usesCleartextTraffic="false">
+        <provider android:name=".PublicPngProvider"
+            android:authorities="io.github.yanhuicsdn.atomcode.uploadfixture.png"
+            android:exported="false" android:grantUriPermissions="true" />
+        <activity android:name=".GrantActivity" android:exported="true"
+            android:noHistory="true" android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.NoDisplay" />
+    </application>
+    <instrumentation android:name=".UploadInstrumentation"
+        android:targetPackage="io.github.yanhuicsdn.atomcode" android:label="Real public-PNG FileReader acceptance" />
+</manifest>
