@@ -87,6 +87,68 @@ final class RuntimeStorageAcceptance {
             LocalRuntimeSmoke.require(Arrays.equals(keep, Files.readAllBytes(canary)), "repair must preserve home");
             runner.pass("Installed daemon corruption is detected and repaired into a fresh generation preserving home");
 
+            step = "detect non-daemon boot corruption";
+            Path secondRoot = installer.rootfs();
+            for (String file : new String[]{"usr/bin/env", "usr/bin/bash",
+                    "usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1",
+                    "usr/lib/aarch64-linux-gnu/libc.so.6", "usr/lib/aarch64-linux-gnu/libtinfo.so.6.4"}) {
+                Path targetFile = secondRoot.resolve(file);
+                byte[] original = Files.readAllBytes(targetFile);
+                try {
+                    Files.write(targetFile, new byte[]{0});
+                    LocalRuntimeSmoke.require(!installer.isCurrent(), "damaged boot file must not validate");
+                } finally { Files.write(targetFile, original); }
+                LocalRuntimeSmoke.require(installer.isCurrent(), "restored boot file must validate");
+            }
+            runner.pass("env, bash, loader, libc and terminal library corruption each fail startup validation");
+
+            step = "repair non-daemon corruption and reclaim generations";
+            Path runtime = root.resolve("runtime");
+            Path unknown = Files.createDirectory(runtime.resolve("unmanaged-notes"));
+            Files.write(unknown.resolve(".ready"), installer.manifest.sha256.getBytes(StandardCharsets.US_ASCII));
+            Path malformed = Files.createDirectory(runtime.resolve("atomcode-0000000000000000-00000000000000000000000000000000"));
+            Files.write(malformed.resolve(".ready"), "invalid".getBytes(StandardCharsets.US_ASCII));
+            Path outside = Files.createDirectory(root.resolve("outside-runtime"));
+            Files.write(outside.resolve("keep"), keep);
+            Files.write(outside.resolve(".ready"), installer.manifest.sha256.getBytes(StandardCharsets.US_ASCII));
+            Path link = runtime.resolve("atomcode-ffffffffffffffff-ffffffffffffffffffffffffffffffff");
+            Files.createSymbolicLink(link, outside);
+            Files.write(secondRoot.resolve("usr/bin/bash"), new byte[]{0});
+            installer.install((message, percent) -> {});
+            LocalRuntimeSmoke.require(installer.isCurrent() && !installer.rootfs().equals(secondRoot), "bash repair must commit a healthy new generation");
+            LocalRuntimeSmoke.require(Files.exists(secondRoot) && !Files.exists(firstRoot), "retain previous and reclaim older completed generation only after commit");
+            LocalRuntimeSmoke.require(Files.isDirectory(unknown) && Files.isDirectory(malformed)
+                    && Files.isSymbolicLink(link) && Arrays.equals(keep, Files.readAllBytes(outside.resolve("keep"))), "cleanup must preserve unknown, malformed and symbolic-link entries");
+            int[] completed = {0};
+            try (java.util.stream.Stream<Path> entries = Files.list(runtime)) {
+                entries.forEach(path -> {
+                    if (Files.isDirectory(path, java.nio.file.LinkOption.NOFOLLOW_LINKS)
+                            && path.getFileName().toString().matches("atomcode-[a-f0-9]{16}-[a-f0-9]{32}")
+                            && !path.equals(malformed)) completed[0]++;
+                });
+            }
+            LocalRuntimeSmoke.require(completed[0] == 2 && Arrays.equals(keep, Files.readAllBytes(canary)), "only active and previous completed generations remain, home unchanged");
+            runner.pass("Non-daemon repair retains active plus previous generation and reclaims only older managed directories");
+
+            step = "optional cleanup failure and retry";
+            Path retention = runtime.resolve("retention");
+            byte[] record = Files.readAllBytes(retention);
+            byte[] activePointer = Files.readAllBytes(pointer);
+            Files.delete(retention);
+            Files.createDirectory(retention);
+            try {
+                LocalRuntimeSmoke.require(installer.isCurrent() && installer.maintenanceWarning() != null,
+                        "unreadable cleanup record must warn without invalidating committed runtime");
+                LocalRuntimeSmoke.require(Arrays.equals(activePointer, Files.readAllBytes(pointer))
+                        && Arrays.equals(keep, Files.readAllBytes(canary)), "cleanup failure must preserve pointer and home");
+            } finally {
+                Files.delete(retention);
+                Files.write(retention, record);
+            }
+            LocalRuntimeSmoke.require(installer.isCurrent() && installer.maintenanceWarning() == null,
+                    "maintenance must retry successfully after storage recovers");
+            runner.pass("Cleanup failure remains observable without losing a committed install, and retries after recovery");
+
             step = "workspace transfer roundtrip";
             Path script = workspace.resolve("run.sh");
             byte[] content = "#!/bin/sh\nprintf '中文\\n'\n".getBytes(StandardCharsets.UTF_8);

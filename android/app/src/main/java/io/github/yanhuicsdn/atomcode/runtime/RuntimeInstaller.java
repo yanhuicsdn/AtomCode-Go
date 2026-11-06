@@ -17,6 +17,7 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -28,37 +29,45 @@ public final class RuntimeInstaller {
     public final RuntimeManifest manifest;
     private final Path base;
     private final AtomicFile current;
+    private final AtomicFile retention;
+    private String maintenanceWarning;
 
     public RuntimeInstaller(Context context) throws IOException {
         this.context = context.getApplicationContext();
         manifest = RuntimeManifest.load(context);
-        base = context.getFilesDir().toPath().resolve("runtime");
+        base = RuntimeFiles.child(context.getFilesDir().toPath(), "runtime");
         current = new AtomicFile(base.resolve("current").toFile());
+        retention = new AtomicFile(base.resolve("retention").toFile());
     }
 
     public Path home() { return context.getFilesDir().toPath().resolve("home"); }
 
+    /** A committed environment remains usable if optional reclamation fails. */
+    public String maintenanceWarning() { return maintenanceWarning; }
+
     public Path rootfs() throws IOException {
-        try {
-            String active = new String(current.readFully(), StandardCharsets.UTF_8);
-            if (!active.matches(java.util.regex.Pattern.quote(manifest.version) + "-[a-f0-9]{32}"))
-                throw new IOException("需要安装或更新运行环境");
-            Path root = base.resolve(active);
-            String marker = new String(Files.readAllBytes(root.resolve(".ready")), StandardCharsets.UTF_8);
-            if (!marker.equals(manifest.sha256)) throw new IOException("运行环境安装不完整");
-            Path daemon = RuntimeFiles.child(root, "usr/local/bin/atomcode-daemon");
-            try (InputStream input = Files.newInputStream(daemon)) {
-                String expected = manifest.json.getJSONObject("build").getString("daemonSha256");
-                if (!RuntimeFiles.sha256(input).equals(expected)) throw new IOException("引擎文件损坏，请重新安装运行环境");
-            }
-            return root;
-        } catch (JSONException error) {
-            throw new IOException("引擎清单损坏", error);
-        }
+        checkCurrentPaths();
+        String active = readAtomic(current, 128);
+        if (!active.matches(java.util.regex.Pattern.quote(manifest.version) + "-[a-f0-9]{32}"))
+            throw new IOException("需要安装或更新运行环境");
+        Path root = RuntimeFiles.child(base, active);
+        if (!Files.isDirectory(root, LinkOption.NOFOLLOW_LINKS)) throw new IOException("运行环境目录无效");
+        String marker = readBounded(RuntimeFiles.child(root, ".ready"), 64);
+        if (!marker.equals(manifest.sha256)) throw new IOException("运行环境安装不完整");
+        validateDaemon(root);
+        return root;
     }
 
     public boolean isCurrent() {
-        try { rootfs(); return true; } catch (IOException error) { return false; }
+        try {
+            Path root = rootfs();
+            // Startup checks cover the pinned userspace's boot and terminal
+            // files, not only the static daemon. DNS refresh uses rootfs()
+            // alone, so it never unpacks the source ZIP or walks a generation.
+            RuntimeIntegrity.validate(root, bootDigests());
+            retryCleanup(root.getFileName().toString());
+            return true;
+        } catch (IOException error) { return false; }
     }
 
     public long requiredBytes() { return manifest.expandedBytes + manifest.expandedBytes / 5 + 64L * 1024 * 1024; }
@@ -77,7 +86,11 @@ public final class RuntimeInstaller {
     }
 
     public void install(Progress progress) throws IOException {
+        maintenanceWarning = null;
         Files.createDirectories(base);
+        checkCurrentPaths();
+        checkRetentionPaths();
+        String previous = previousCompleted();
         verifyNativeLibraries();
         if (context.getFilesDir().getUsableSpace() < requiredBytes())
             throw new IOException("空间不足：本次安装至少需要 " + requiredBytes() / (1024 * 1024) + " MB 可用空间");
@@ -91,6 +104,8 @@ public final class RuntimeInstaller {
         Files.createDirectory(stage);
         try {
             extract(stage, progress);
+            RuntimeIntegrity.validate(stage, bootDigests());
+            validateDaemon(stage);
             // fsync file data alone does not persist the directory entries.
             // Commit nested directories and symlinks before the ready marker.
             Files.walkFileTree(stage, new java.nio.file.SimpleFileVisitor<Path>() {
@@ -109,6 +124,11 @@ public final class RuntimeInstaller {
             // same-version repair or interrupted upgrade.
             RuntimeFiles.atomicMove(stage, destination);
             syncDirectory(base);
+            // Write a retention record tied to this exact new pointer BEFORE
+            // publishing it. If the current-pointer commit fails or is killed,
+            // the record does not match the old active pointer and cannot prune.
+            writeAtomic(retention, generation + "\n" + (previous == null ? "" : previous) + "\n");
+            syncDirectory(base);
             FileOutputStream pointer = current.startWrite();
             try {
                 pointer.write(generation.getBytes(StandardCharsets.UTF_8));
@@ -119,12 +139,76 @@ public final class RuntimeInstaller {
             }
             syncDirectory(base);
             Files.createDirectories(home().resolve("workspace"));
-            progress.update("安装完成", 100);
-            // Keep previous and older generations until another successful
-            // install. Disk reclamation never runs against the user's home.
+            retryCleanup(generation);
+            progress.update(maintenanceWarning == null ? "安装完成" : maintenanceWarning, 100);
         } catch (IOException | RuntimeException error) {
             RuntimeFiles.deleteTree(stage);
             throw error;
+        }
+    }
+
+    private Map<String, String> bootDigests() throws IOException {
+        return RuntimeIntegrity.sourceDigests(manifest.sha256, () -> context.getAssets().open("runtime/rootfs.zip"));
+    }
+
+    private void validateDaemon(Path root) throws IOException {
+        Path daemon = RuntimeFiles.child(root, "usr/local/bin/atomcode-daemon");
+        if (!Files.isRegularFile(daemon, LinkOption.NOFOLLOW_LINKS) || !Files.isExecutable(daemon))
+            throw new IOException("引擎文件缺失或执行权限损坏，请重新安装运行环境");
+        try (InputStream input = Files.newInputStream(daemon)) {
+            String expected = manifest.json.getJSONObject("build").getString("daemonSha256");
+            if (!RuntimeFiles.sha256(input).equals(expected)) throw new IOException("引擎文件损坏，请重新安装运行环境");
+        } catch (JSONException invalid) { throw new IOException("引擎清单损坏", invalid); }
+    }
+
+    private void checkCurrentPaths() throws IOException {
+        for (String name : new String[]{"current", "current.bak", "current.new"})
+            RuntimeFiles.child(base, name);
+    }
+
+    private void checkRetentionPaths() throws IOException {
+        for (String name : new String[]{"retention", "retention.bak", "retention.new"})
+            RuntimeFiles.child(base, name);
+    }
+
+    private static String readBounded(Path path, int limit) throws IOException {
+        try (InputStream input = Files.newInputStream(path)) { return RuntimeManifest.readText(input, limit); }
+    }
+
+    private static String readAtomic(AtomicFile file, int limit) throws IOException {
+        try (InputStream input = file.openRead()) { return RuntimeManifest.readText(input, limit); }
+    }
+
+    private static void writeAtomic(AtomicFile file, String value) throws IOException {
+        FileOutputStream output = file.startWrite();
+        try { output.write(value.getBytes(StandardCharsets.UTF_8)); file.finishWrite(output); }
+        catch (IOException error) { file.failWrite(output); throw error; }
+    }
+
+    private String previousCompleted() {
+        try {
+            String previous = readAtomic(current, 128);
+            return RuntimeGenerations.completed(base, previous) ? previous : null;
+        } catch (IOException unknown) { return null; }
+    }
+
+    private void retryCleanup(String active) {
+        maintenanceWarning = null;
+        try {
+            checkCurrentPaths();
+            checkRetentionPaths();
+            String record;
+            try { record = readAtomic(retention, 256); }
+            catch (java.io.FileNotFoundException unreadable) {
+                if (!Files.exists(base.resolve("retention"), LinkOption.NOFOLLOW_LINKS)
+                        && !Files.exists(base.resolve("retention.bak"), LinkOption.NOFOLLOW_LINKS)) return;
+                throw unreadable;
+            }
+            if (RuntimeGenerations.pruneCommitted(base, active, record)) syncDirectory(base);
+        } catch (IOException cleanupFailure) {
+            // Reclamation cannot turn a successful commit into a failed install.
+            // The same active-bound record is retried on the next valid startup.
+            maintenanceWarning = "运行环境已安装；旧环境暂无法清理，将在下次启动重试";
         }
     }
 
