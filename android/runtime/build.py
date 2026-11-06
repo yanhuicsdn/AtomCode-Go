@@ -43,6 +43,14 @@ def file_digest(path: Path) -> str:
     return h.hexdigest()
 
 
+def configured_daemon(repo: Path) -> Path:
+    metadata = json.loads(subprocess.check_output(
+        ["cargo", "metadata", "--no-deps", "--locked", "--format-version", "1"],
+        cwd=repo, text=True,
+    ))
+    return Path(metadata["target_directory"]) / "aarch64-unknown-linux-musl/release/atomcode-daemon"
+
+
 def fetch(item: dict, cache: Path) -> Path:
     path = cache / item["name"]
     if path.is_file() and file_digest(path) == item["sha256"]:
@@ -329,6 +337,7 @@ def assemble(inputs: list, paths: list, daemon: Path, out: Path) -> dict:
                   "webuiLockSha256": file_digest(REPO / "webui/package-lock.json"),
                   "cargoLockSha256": file_digest(REPO / "Cargo.lock"),
                   "rustVersion": subprocess.check_output(["rustc", "--version"], text=True).strip(),
+                  "sourceDateEpoch": os.environ.get("SOURCE_DATE_EPOCH"),
                   "sourceDiffSha256": digest(subprocess.check_output(["git", "diff", "HEAD", "--binary"], cwd=REPO))}
     identity = digest(json.dumps(provenance, sort_keys=True).encode())[:16]
     manifest = {"schema": 1, "abi": "arm64-v8a", "runtimeVersion": "atomcode-" + identity,
@@ -344,7 +353,8 @@ def assemble(inputs: list, paths: list, daemon: Path, out: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--fetch-only", action="store_true")
-    parser.add_argument("--daemon", type=Path, default=REPO / "target/aarch64-unknown-linux-musl/release/atomcode-daemon")
+    parser.add_argument("--daemon", type=Path,
+                        help="daemon artifact; defaults to Cargo's configured target directory")
     parser.add_argument("--out", type=Path, default=HERE / "out/arm64-v8a")
     args = parser.parse_args()
     inputs = json.loads((HERE / "dependencies.json").read_text())["inputs"]
@@ -355,7 +365,8 @@ def main() -> None:
         return
     if not (REPO / "webui/dist/index.html").is_file():
         raise ValueError("build the WebUI before building the daemon and rootfs")
-    manifest = assemble(inputs, paths, args.daemon, args.out)
+    daemon = args.daemon if args.daemon is not None else configured_daemon(REPO)
+    manifest = assemble(inputs, paths, daemon, args.out)
     print(json.dumps(manifest, indent=2))
 
 

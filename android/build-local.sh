@@ -40,8 +40,11 @@ export PATH="$ROOT/.tools/python/bin:$PATH"
 rustup target add aarch64-unknown-linux-musl
 runtime_target_dir="$(cargo metadata --no-deps --locked --format-version 1 | python -c 'import json, sys; print(json.load(sys.stdin)["target_directory"])')"
 cargo zigbuild --locked --release -p atomcode-daemon --target aarch64-unknown-linux-musl
+cargo metadata --locked --filter-platform aarch64-unknown-linux-musl --format-version 1 > "$runtime_target_dir/atomcode-notices-metadata.json.part"
+mv "$runtime_target_dir/atomcode-notices-metadata.json.part" "$runtime_target_dir/atomcode-notices-metadata.json"
 python android/runtime/build.py --daemon "$runtime_target_dir/aarch64-unknown-linux-musl/release/atomcode-daemon"
 python android/runtime/source_inventory.py
+python android/runtime/notices.py --repo "$ROOT" --cargo-metadata "$runtime_target_dir/atomcode-notices-metadata.json" --out android/runtime/out/arm64-v8a/assets/runtime/licenses/dependencies
 python -m unittest discover -s android/runtime/tests -v
 
 # JAVA_HOME must select JDK 17+; ANDROID_HOME/ANDROID_SDK_ROOT must identify
