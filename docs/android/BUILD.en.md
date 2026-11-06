@@ -84,7 +84,7 @@ ZIP workspace import/export is limited to 2 GB and 100,000 entries. Imports crea
 
 The default artifact is signed by the local Android debug keystore and is a development package. `assembleRelease` produces an unsigned artifact; it does not silently substitute the debug key. Production release requires a retained signing key, monotonic version codes and completed device/upgrade acceptance. Changing the signing key prevents an in-place APK upgrade; uninstalling deletes app data.
 
-Minimum SDK is 26, ARM64 only. Target SDK 28 follows the reference's private-executable strategy and is a sideloading constraint, not a Play Store-ready configuration. PRoot native ELF LOAD alignment is 16 KB; actual 16 KB page-size execution remains unverified.
+Minimum SDK is 26, ARM64 only. Target SDK 28 follows the reference's private-executable strategy and is a sideloading constraint, not a Play Store-ready configuration. PRoot native ELF LOAD alignment is 16 KB. The current APK passed the 12-check local-runtime suite on the official API 36 ARM64 `google_apis_ps16k` revision 7 image, with actual `getconf PAGE_SIZE` returning `16384`; this establishes that emulator configuration, not every 16 KB device. See the verification record for scope and remaining platforms.
 
 **Source builds do not contain the closed-source official CodingPlan request signer. AtomGit login alone does not enable official models.** Add your own compatible model account/API key in Model configuration. The current binary advertises its real signing capability and explains this limitation. The port does not implement or bypass that private signing protocol.
 

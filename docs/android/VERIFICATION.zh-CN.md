@@ -24,6 +24,7 @@ AtomCode-Go 0.1.0，ARM64，Android 调试签名。当前本地 APK SHA-256：
 | --- | --- | --- |
 | Up Mobile Mover Edition 真机 | Android 14 / API 34，ARM64，4096 bytes | 当前包 10 项存储、独立 UID 7 项及宿主前后 2 项通过，包含对实际运行父进程 argv 的检查。UI 仍待用户解锁后复测，不能记为当前包 UI 通过 |
 | sdk_gphone64_arm64 模拟器 | Android 16 / API 36，ARM64，4096 bytes | 当前包连续 3 次在线 smoke，各 12 项通过；存储 10 项、独立 UID 7 项、宿主 2 项和键盘/旋转 6 项通过。当前离线专项尚无重跑结果；旧包证据见下方范围说明 |
+| AtomCode_API36_16K_Arm64 官方镜像模拟器 | Android 16 / API 36，ARM64，运行时页大小实测 16384 bytes | 当前包 12 项 smoke、独立 UID 7 项及宿主前后 2 项全部通过，无 FAIL；不扩大为独立存储/旋转专项、真实模型或全部 16 KB 设备验收通过 |
 
 当前 `ce6303f66` APK 的证据文件：
 
@@ -31,6 +32,9 @@ AtomCode-Go 0.1.0，ARM64，Android 调试签名。当前本地 APK SHA-256：
 - `atomcode-processfix-{emulator,phone}-security/foreign-uid-probe.txt`：两端各 7 项通过；同目录 `security-owner.txt`：各 2 项通过。宿主检查还要求正向读到实际带标记的 PRoot 父进程，确认参数中没有 `ATOMCODE_DAEMON_TOKEN=` 赋值。
 - `atomcode-processfix-{emulator,phone}-storage.log`：两端各 10 项通过。
 - `atomcode-processfix-emulator-keyboard.log`：6 项通过，并保留两次生命周期证明重建但 monitor 未投递的观察。
+- `atomcode-16k-environment.json`：`emulator-5562` / `AtomCode_API36_16K_Arm64` 已启动完成，API 36、`arm64-v8a`、实测页大小 `16384`；镜像包 `system-images;android-36;google_apis_ps16k;arm64-v8a`，revision 7，emulator 36.1.9。
+- `atomcode-16k-install.json`：主 APK、设备测试 APK 和独立 UID 探测 APK 安装退出码均为 0；`atomcode-16k-smoke.log`：当前包 12 项通过，无 FAIL。探测 APK 安装成功本身不是安全探测通过的证据。
+- `atomcode-16k-security/foreign-uid-probe.txt`：7 项通过；同目录 `security-owner.txt`：2 项通过。`security-probe-summary.json` 记录设备 `emulator-5562`、7/2 项计数、未向探测端提供凭据和有限探测范围；协调器退出码 0。
 
 前一宿主 `4b31953b0` / APK `580c500a468055ab7d6e04efba6034cfe7cddff3b0d5421460c1e96a776e12ee` 的补充证据继续保留：两端 `atomcode-recovery-final-{emulator,phone}-storage.log` 各 10 项；`atomcode-recovery-final-emulator-offline.log` 12 项；`atomcode-recovery-lifecycle-keyboard-{1,2}.log` 各 6 项及 monitor 观察。这些结果覆盖未改的安装/回收和布局代码，但不记成当前 APK 重新执行的专项。
 
@@ -60,7 +64,7 @@ ZIP 输入和展开内容各限 2 GB，需为两者预留临时空间。中央�
 
 ## 独立 UID 探测范围
 
-当前包在两端用不同 UID 的探测 APK 实际证明 7 项：UID 与主应用不同；访问运行中私有 Unix socket 被 `EACCES` 拒绝；未认证 sessions 请求拒绝；外来 Origin 拒绝；伪造 Host 拒绝；不能绑定网关当前占用的回环端口；默认平台 TLS 信任拒绝应用自签名证书。宿主在探测前后均能认证访问健康的私有 socket，另有 2 项通过；检查同时正向核对了实际运行父进程的命令行没有 daemon token 赋值。
+当前包在已测三种环境（4 KB 真机、4 KB 模拟器、本次 16 KB 模拟器）各用不同 UID 的探测 APK 实际证明 7 项：UID 与主应用不同；访问运行中私有 Unix socket 被 `EACCES` 拒绝；未认证 sessions 请求拒绝；外来 Origin 拒绝；伪造 Host 拒绝；不能绑定网关当前占用的回环端口；默认平台 TLS 信任拒绝应用自签名证书。每种环境的宿主在探测前后均能认证访问健康的私有 socket，另有 2 项通过；检查同时正向核对了实际运行父进程的命令行没有 daemon token 赋值。
 
 探测未获得或打印 token、Cookie、模型凭据。已占用端口绑定失败不等于启动前抢占/伪造监听者竞态验收；这些有限测试不证明所有恶意应用、上传、外部导航或备份攻防均已覆盖。
 
@@ -89,19 +93,19 @@ AtomGit 登录后的真实模型请求失败。共享 provider factory 返回 `S
 
 **真实模型流式回复、模型驱动审批/拒绝、取消及完整对话恢复均未通过验收。** 空会话 metadata 保留不是真实对话恢复；上游隐藏空会话，测试仅直接解析 native session ID 检查 metadata。
 
-官方 API 36 的 16 KB ARM64 镜像正在获取，尚无安装、启动或 `getconf PAGESIZE` 结果，不能写成 16 KB 运行通过。ELF LOAD 静态对齐不替代设备执行证据。Android 8、更多厂商、IPv6/外部 HTTPS、休眠网络恢复和真实模型仍未验收。
+官方 API 36 的 Google APIs 16 KB ARM64 镜像 revision 7 已安装并启动，运行时页大小实测 `16384` bytes；当前 APK 的 12 项本机 smoke、独立 UID 7 项及宿主 2 项在该环境通过。这是明确的单一 16 KB 模拟器执行证据，不再只有 ELF LOAD 静态对齐。尚不能据此声明 16 KB 真机、其他 16 KB 镜像、独立存储/旋转专项或真实模型验收通过。Android 8、更多厂商、IPv6/外部 HTTPS、休眠网络恢复和真实模型仍未验收。
 
 ## 最终验收矩阵
 
 | 目标 | 已有证据与开放项 |
 | --- | --- |
 | 1 可复现交付 | 固定源码、锁、依赖哈希、ELF 审计和源码清单已提供；干净机器重建、正式签名和完整对应源码/许可交付未完成 |
-| 2 安装启动 | 当前包模拟器连续 3 次在线各 12 项、两端各 10 项存储通过；旧包离线证据单独保留；实际磁盘耗尽、升级硬中断/强杀及当前手机 UI 复测未完成 |
-| 3 本机执行 | 当前包的实际 PRoot/daemon、PTY/Git/文件有证据；此前模拟器断网本机流程保留，当前包离线专项和手机离线专项未重跑 |
-| 4 安全认证 | 固定证书、Cookie/401/跨源和独立 UID 7+2 项有证据；启动前抢占/伪造服务、上传、备份和完整攻防未完成 |
+| 2 安装启动 | 当前包 4 KB 模拟器连续 3 次在线各 12 项、两端各 10 项存储通过；新增官方 16 KB 模拟器安装及 12 项 smoke 通过；旧包离线证据单独保留；实际磁盘耗尽、升级硬中断/强杀及当前手机 UI 复测未完成 |
+| 3 本机执行 | 当前包在已测 4 KB/16 KB 环境的实际 PRoot/daemon、PTY/Git/文件有证据；此前模拟器断网本机流程保留，当前包离线专项和手机离线专项未重跑 |
+| 4 安全认证 | 固定证书、Cookie/401/跨源和三种已测 4 KB/16 KB 环境各 7+2 项独立 UID 检查有证据；启动前抢占/伪造服务、上传、备份和完整攻防未完成 |
 | 5 核心工作流 | 本机终端与文件操作通过；真实模型及模型驱动工具/取消未通过 |
 | 6 会话数据 | 当前模拟器工作区及空会话 metadata 重启保留；当前两端取消重装、损坏修复和归档 API 通过；**真实对话恢复从未通过**，硬中断、系统文件选择和强杀恢复待验收 |
 | 7 手机可用性 | 当前包模拟器 smoke 全屏/键盘和 6 项键盘/旋转专项通过；手机解锁 UI 尚未重跑，旧包结果不能替代；完整输入/草稿/代码块/文件选择矩阵未完成 |
 | 8 生命周期 | 旧包在线停止失败保留；新进程身份复核有 9 项 JVM 回归及当前模拟器连续 3 次完整启停通过；长时间后台、强制停止和厂商行为未完成 |
-| 9 兼容网络 | 当前运行证据仅 Android 14 真机和 Android 16 模拟器、4 KB；16 KB 镜像下载不算运行验收，Android 8、多厂商和完整网络矩阵未完成 |
+| 9 兼容网络 | 有 Android 14 真机/Android 16 模拟器的 4 KB 证据，新增官方 API 36 ARM64 镜像 revision 7 的实际 16 KB 启动、12 项 smoke 及 7+2 项独立 UID 检查；不代表所有 16 KB 设备，Android 8、多厂商、16 KB 其余专项及完整网络矩阵未完成 |
 | 10 验证证据 | 当前哈希、源码和通过/失败/阻塞记录分开保留；不能宣布全部最终验收完成 |

@@ -24,6 +24,7 @@ Local `delivery.json`, `SHA256SUMS`, `build-report.json` and device evidence ide
 | --- | --- | --- |
 | Physical Up Mobile Mover Edition | Android 14 / API 34, ARM64, 4096 bytes | Current APK passed ten storage checks, seven independent-UID probes and two owner checks, including inspection of actual runtime-parent argv. UI awaits user unlock and is not recorded as passed |
 | sdk_gphone64_arm64 emulator | Android 16 / API 36, ARM64, 4096 bytes | Current APK passed three consecutive online smoke runs, 12 checks each, plus ten storage checks, seven independent-UID probes, two owner checks and six keyboard/rotation checks. Current offline rerun evidence is not yet available; older evidence is scoped below |
+| Official-image AtomCode_API36_16K_Arm64 emulator | Android 16 / API 36, ARM64, measured runtime page size 16384 bytes | Current APK passed 12 smoke checks, seven independent-UID probes and two owner checks with no FAIL; this does not establish focused storage/rotation, real-model or all-16-KB-device acceptance |
 
 Evidence for the current `ce6303f66` APK:
 
@@ -31,6 +32,9 @@ Evidence for the current `ce6303f66` APK:
 - `atomcode-processfix-{emulator,phone}-security/foreign-uid-probe.txt`: seven passes per device; `security-owner.txt` in each directory: two passes. Owner checks also positively inspect the actual marked PRoot parent and require no `ATOMCODE_DAEMON_TOKEN=` assignment in its arguments.
 - `atomcode-processfix-{emulator,phone}-storage.log`: ten passes on each device.
 - `atomcode-processfix-emulator-keyboard.log`: six passes, retaining two observations of lifecycle-proved recreation without monitor delivery.
+- `atomcode-16k-environment.json`: `emulator-5562` / `AtomCode_API36_16K_Arm64` completed boot, API 36, `arm64-v8a`, measured page size `16384`; image package `system-images;android-36;google_apis_ps16k;arm64-v8a`, revision 7, emulator 36.1.9.
+- `atomcode-16k-install.json`: owner APK, instrumentation APK and separate-UID probe APK all installed with exit code zero; `atomcode-16k-smoke.log`: current APK passed 12 checks without FAIL. Installing the probe APK alone is not proof that security probing passed.
+- `atomcode-16k-security/foreign-uid-probe.txt`: seven passes; `security-owner.txt` in that directory: two passes. `security-probe-summary.json` identifies `emulator-5562`, the 7/2 counts, no credentials provided to the probe and the bounded probe scope; coordinator exit code was zero.
 
 Supplementary evidence from host `4b31953b0` / APK `580c500a468055ab7d6e04efba6034cfe7cddff3b0d5421460c1e96a776e12ee` remains retained: `atomcode-recovery-final-{emulator,phone}-storage.log` each has ten passes; `atomcode-recovery-final-emulator-offline.log` has 12; `atomcode-recovery-lifecycle-keyboard-{1,2}.log` each has six with monitor observations. These cover unchanged installer/reclamation and layout code, but are not recorded as current-APK executions.
 
@@ -60,7 +64,7 @@ Compressed ZIP input and expanded content are each limited to 2 GB and both requ
 
 ## Independent-UID probe scope
 
-The current APK was tested with a separate-UID probe on each device: its UID differs from the owner; access to the live private Unix socket fails with `EACCES`; unauthenticated sessions access is denied; foreign Origin is rejected; forged Host is rejected; the probe cannot bind the gateway's occupied loopback port; and default platform TLS trust rejects the app's self-signed certificate. Two additional checks establish authenticated owner access to a healthy private socket before and after probing, while positively inspecting the actual runtime-parent command line for absence of a daemon-token assignment.
+The current APK was tested with a separate-UID probe on each of three configurations (4 KB physical phone, 4 KB emulator and this 16 KB emulator): its UID differs from the owner; access to the live private Unix socket fails with `EACCES`; unauthenticated sessions access is denied; foreign Origin is rejected; forged Host is rejected; the probe cannot bind the gateway's occupied loopback port; and default platform TLS trust rejects the app's self-signed certificate. Two additional checks in each configuration establish authenticated owner access to a healthy private socket before and after probing, while positively inspecting the actual runtime-parent command line for absence of a daemon-token assignment.
 
 The probe does not obtain or print tokens, cookies or model credentials. Failure to bind an occupied port does not establish protection against the complete pre-start port-takeover/fake-listener race. These checks do not prove coverage of every malicious application, upload, external navigation or backup attack.
 
@@ -89,19 +93,19 @@ A real-model request failed after AtomGit login. The shared provider factory ret
 
 **Real-model streaming, model-driven approval/denial, cancellation and complete conversation resume have not passed acceptance.** Empty native-session metadata retention is not real-conversation resume. The normal catalog hides empty conversations; tests resolve native session IDs directly to inspect metadata.
 
-An official API 36 16 KB ARM64 image is being acquired, but no installation, boot or `getconf PAGESIZE` result exists yet; downloading is not a 16 KB execution pass. ELF LOAD alignment is static evidence only. Android 8, additional vendors, IPv6/external HTTPS, sleep/network recovery and real models remain unaccepted.
+Official API 36 Google APIs 16 KB ARM64 image revision 7 has installed and booted, with measured runtime page size `16384` bytes; the current APK passed 12 local smoke checks, seven independent-UID probes and two owner checks on it. This is execution evidence for one specific 16 KB emulator configuration, rather than ELF LOAD alignment alone. It does not establish 16 KB physical devices, other 16 KB images, focused storage/rotation or real-model acceptance. Android 8, additional vendors, IPv6/external HTTPS, sleep/network recovery and real models remain unaccepted.
 
 ## Final acceptance matrix
 
 | Criterion | Evidence and outstanding work |
 | --- | --- |
 | 1 Reproducible delivery | Pinned source/lockfiles, hashes, ELF audit and source inventory exist; clean-machine rebuilding, production signing and complete corresponding-source/license delivery remain |
-| 2 Installation/startup | Current APK passed three consecutive 12-check online emulator runs and ten storage checks on each device; older offline evidence is retained separately; physical exhaustion, interrupted upgrades/abrupt kills and current phone UI remain |
-| 3 Local execution | Current actual PRoot/daemon, PTY/Git/files are evidenced; prior emulator offline results remain retained, while current-APK offline and phone offline suites have not been rerun |
-| 4 Authentication/security | Certificate pin, cookies/401/cross-origin and independent-UID 7+2 checks are evidenced; pre-start interception/fake services, upload, backups and comprehensive attack coverage remain |
+| 2 Installation/startup | Current APK passed three consecutive 12-check online runs on the 4 KB emulator and ten storage checks on each device, plus installation and 12 smoke checks on the new official 16 KB emulator; older offline evidence is retained separately; physical exhaustion, interrupted upgrades/abrupt kills and current phone UI remain |
+| 3 Local execution | Current actual PRoot/daemon, PTY/Git/files are evidenced on the tested 4 KB/16 KB configurations; prior emulator offline results remain retained, while current-APK offline and phone offline suites have not been rerun |
+| 4 Authentication/security | Certificate pin, cookies/401/cross-origin and independent-UID 7+2 checks in each of three tested 4 KB/16 KB configurations are evidenced; pre-start interception/fake services, upload, backups and comprehensive attack coverage remain |
 | 5 Core workflow | Local terminal/file operations passed; real models and model-driven tools/cancellation remain unpassed |
 | 6 Sessions/data | Current emulator workspace/empty native metadata survive restart; current canceled-repair, corruption-repair and archive APIs passed on both devices; **real-conversation resume has never passed**; hard interruption, system file-picker interaction and forced-kill recovery remain |
 | 7 Mobile usability | Current emulator smoke fullscreen/keyboard and six focused keyboard/rotation checks passed; unlocked-phone UI remains missing and old-APK results cannot replace it; complete input/draft/code/file-picker coverage remains |
 | 8 Lifecycle | Old-APK online stop failure is retained; new identity rechecks have nine JVM regressions and three complete current-emulator start-stop passes; long-background, forced-stop and vendor checks remain |
-| 9 Platform/network | Runtime evidence covers Android 14 hardware/Android 16 emulator, both 4 KB; downloading a 16 KB image is not execution acceptance, and Android 8/more vendors/full network matrix remain |
+| 9 Platform/network | Android 14 hardware/Android 16 emulator have 4 KB evidence; official API 36 ARM64 image revision 7 adds measured 16 KB boot, 12-check smoke and independent-UID 7+2 evidence. This does not cover all 16 KB devices; Android 8, more vendors, other 16 KB checks and the full network matrix remain |
 | 10 Evidence | Current hashes/source and pass/failure/blocker records are separated; complete final acceptance cannot be declared |
