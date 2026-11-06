@@ -1,0 +1,12 @@
+# Runtime recovery and independent-UID validation
+
+Baseline: `codex/android-local-runtime`, `26db8546d`, clean worktree. Previous goal turn is classified as progress: importer hardening, isolated device storage checks, WebView diagnostics, source inventory, signed debug delivery and bilingual publication all have retained evidence. Full acceptance remains unproven, including the initial unexplained emulator rotation failure and user-deferred real-model access.
+
+The host continues to own installation and Android process/UI integration. The coding runtime and session store remain the only agent/session owners. This pass does not modify kernel/coding lifecycle or persistence.
+
+1. Derive authenticated critical boot-file hashes from the already pinned bundled archive. Check them at installation and boot selection, without inflating the archive on network callbacks. Reinstall a damaged env/bash/loader/libc/tinfo generation while keeping home separate. This is a critical-file check, not a claim that every Linux file is checked.
+2. Only after a successful atomic pointer commit, retain active plus the previous completed pointer and reclaim older host-managed generations. Preserve unknown names, invalid markers, symlinks and the user home. A retained completed generation is not a newly verified backup. Cleanup errors must not mislabel an already committed install as failed.
+3. Exercise keyboard plus rotation with actual touch/IME observations. Wait for a resumed replacement Activity with stable orientation/geometry; retain the old pass conditions and controlled observations. A new test cannot retroactively prove the cause of the original failure.
+4. Use an independent test-only APK with a different UID to probe the real owner's private socket and loopback gateway. The owner proves its socket/API are live before and after, and exposes only public endpoint coordinates plus its public certificate hash to the host coordinator. No token/cookie is passed to the probe. Test EACCES, 401, foreign Origin/Host rejection, active-port exclusivity and default TLS trust. This does not claim all pre-launch races, uploads or backup attacks are covered.
+
+All builds and checks are local. Device tests use disposable directories; no phone app-data clearing or model requests. Keep evidence keyed to app/test source and APK hashes. Source publication retains English GitHub / Chinese GitCode defaults and skips CI; generated APKs remain local. Remaining matrix conditions stay open until authoritative evidence satisfies their actual scope.

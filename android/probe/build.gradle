@@ -1,0 +1,27 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Deliberately separate from :app. Build/install only for device security checks.
+android {
+    namespace 'io.github.yanhuicsdn.atomcode.probe'
+    compileSdk 36
+    defaultConfig {
+        applicationId 'io.github.yanhuicsdn.atomcode.probe'
+        minSdk 26
+        targetSdk 28
+        versionCode 1
+        versionName 'test-only'
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    lint { disable 'ExpiredTargetSdkVersion' }
+}
+
+androidComponents {
+    beforeVariants(selector().withBuildType('release')) { variant ->
+        variant.enable = false
+    }
+}

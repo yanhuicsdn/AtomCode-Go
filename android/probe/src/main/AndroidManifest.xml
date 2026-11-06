@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application
+        android:label="AtomCode-Go security probe"
+        android:icon="@android:drawable/ic_lock_lock"
+        android:allowBackup="false"
+        android:fullBackupContent="false"
+        android:usesCleartextTraffic="false"
+        android:testOnly="true" />
+    <instrumentation
+        android:name=".ForeignUidProbe"
+        android:targetPackage="io.github.yanhuicsdn.atomcode.probe"
+        android:functionalTest="true"
+        android:handleProfiling="false"
+        android:label="AtomCode-Go distinct-UID checks" />
+</manifest>

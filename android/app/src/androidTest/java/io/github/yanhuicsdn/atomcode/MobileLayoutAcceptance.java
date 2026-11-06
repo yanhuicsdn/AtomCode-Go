@@ -27,16 +27,25 @@ import org.json.JSONObject;
 /** Focused device UI checks. Never submits a message or reads account content. */
 final class MobileLayoutAcceptance {
     private final LocalRuntimeSmoke host;
+    private final boolean keyboardRotation;
     private final Map<Activity, Boolean> previousKeepScreenOn = new LinkedHashMap<>();
     private volatile Activity current;
+    private volatile Activity resumed;
     private String origin;
     private String entry;
     private String stage = "initialization";
     private String observation;
     private int originalOrientation;
     private boolean capturedOrientation;
+    private boolean requestedKeyboard;
+    private boolean initiallyVisibleKeyboard;
 
-    MobileLayoutAcceptance(LocalRuntimeSmoke host) { this.host = host; }
+    MobileLayoutAcceptance(LocalRuntimeSmoke host) { this(host, false); }
+
+    MobileLayoutAcceptance(LocalRuntimeSmoke host, boolean keyboardRotation) {
+        this.host = host;
+        this.keyboardRotation = keyboardRotation;
+    }
 
     void run() {
         Bundle result = new Bundle();
@@ -53,8 +62,12 @@ final class MobileLayoutAcceptance {
                 activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
             }
             @Override public void onActivityStarted(Activity activity) {}
-            @Override public void onActivityResumed(Activity activity) {}
-            @Override public void onActivityPaused(Activity activity) {}
+            @Override public void onActivityResumed(Activity activity) {
+                if (activity instanceof MainActivity) resumed = activity;
+            }
+            @Override public void onActivityPaused(Activity activity) {
+                if (resumed == activity) resumed = null;
+            }
             @Override public void onActivityStopped(Activity activity) {}
             @Override public void onActivitySaveInstanceState(Activity activity, Bundle saved) {}
             @Override public void onActivityDestroyed(Activity activity) {}
@@ -84,10 +97,23 @@ final class MobileLayoutAcceptance {
                 rotate(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, Configuration.ORIENTATION_PORTRAIT);
             host.pass("Foreground WebView renders with a visible composer before rotation");
 
+            if (keyboardRotation) {
+                stage = "portrait-keyboard";
+                initiallyVisibleKeyboard = keyboardState(current).visible;
+                touchComposer(current);
+                keyboardFits(current);
+                host.pass("Portrait on-screen keyboard is visible and does not cover the composer");
+            }
+
             stage = "landscape-recreation";
             rotate(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE, Configuration.ORIENTATION_LANDSCAPE);
             assertSameRuntime();
-            host.pass("Landscape Activity recreation preserves runtime generation and fullscreen composer");
+            if (keyboardRotation) {
+                boolean retained = keyboardState(current).visible;
+                touchComposer(current);
+                keyboardFits(current);
+                host.pass("Landscape rotation preserves runtime and composer with docked keyboard (retained before tap=" + retained + ")");
+            } else host.pass("Landscape Activity recreation preserves runtime generation and fullscreen composer");
 
             stage = "landscape-long-text";
             longTextScroll(current);
@@ -96,7 +122,12 @@ final class MobileLayoutAcceptance {
             stage = "portrait-recreation";
             rotate(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT, Configuration.ORIENTATION_PORTRAIT);
             assertSameRuntime();
-            host.pass("Portrait Activity recreation preserves runtime generation and usable composer");
+            if (keyboardRotation) {
+                boolean retained = keyboardState(current).visible;
+                touchComposer(current);
+                keyboardFits(current);
+                host.pass("Portrait return preserves runtime and composer with docked keyboard (retained before tap=" + retained + ")");
+            } else host.pass("Portrait Activity recreation preserves runtime generation and usable composer");
 
             stage = "workspace-and-generation";
             LocalRuntimeSmoke.require(java.util.Arrays.equals(expected, Files.readAllBytes(canary)), "workspace canary retained");
@@ -110,6 +141,11 @@ final class MobileLayoutAcceptance {
             try {
                 host.runOnMainSync(() -> {
                     application.unregisterActivityLifecycleCallbacks(callbacks);
+                    if (keyboardRotation && requestedKeyboard && !initiallyVisibleKeyboard && current != null && !current.isDestroyed()) {
+                        WebView browser = findWebView(current.getWindow().getDecorView());
+                        if (browser != null) current.getSystemService(android.view.inputmethod.InputMethodManager.class)
+                                .hideSoftInputFromWindow(browser.getWindowToken(), 0);
+                    }
                     for (Map.Entry<Activity, Boolean> item : previousKeepScreenOn.entrySet())
                         if (!item.getKey().isDestroyed() && !item.getValue())
                             item.getKey().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -150,21 +186,44 @@ final class MobileLayoutAcceptance {
         try {
             host.runOnMainSync(() -> before.setRequestedOrientation(request));
             Activity replacement = null;
+            Activity stableCandidate = null;
+            int stableWidth = 0, stableHeight = 0;
+            boolean observedReplacement = false, observedPendingConfiguration = false;
             long deadline = SystemClock.elapsedRealtime() + 20000;
             while (SystemClock.elapsedRealtime() < deadline) {
-                Activity candidate = host.waitForMonitorWithTimeout(monitor, 1000);
-                if (candidate != null && candidate != before && !candidate.isDestroyed()) {
-                    replacement = candidate;
-                    break;
-                }
+                Activity candidate = host.waitForMonitorWithTimeout(monitor, 200);
+                if (candidate != null && candidate != before) observedReplacement = true;
+                Activity latest = current;
+                final int[] geometry = new int[3];
+                final boolean[] usable = new boolean[1];
+                if (latest != null && latest != before) host.runOnMainSync(() -> {
+                    View decor = latest.getWindow().getDecorView();
+                    geometry[0] = latest.getResources().getConfiguration().orientation;
+                    geometry[1] = decor.getWidth();
+                    geometry[2] = decor.getHeight();
+                    usable[0] = !latest.isDestroyed() && resumed == latest && decor.isAttachedToWindow()
+                            && geometry[0] == expectedConfiguration && geometry[1] > 0 && geometry[2] > 0;
+                });
+                if (latest != null && latest != before && geometry[0] != expectedConfiguration)
+                    observedPendingConfiguration = true;
+                observation = "replacement=" + observedReplacement + ", resumed=" + (resumed == latest)
+                        + ", expected=" + expectedConfiguration + ", actual=" + geometry[0]
+                        + ", width=" + geometry[1] + ", height=" + geometry[2];
+                if (observedReplacement && usable[0]) {
+                    // ActivityMonitor can observe a new instance before its
+                    // resumed configuration/window geometry has settled.
+                    if (stableCandidate == latest && stableWidth == geometry[1] && stableHeight == geometry[2]) {
+                        replacement = latest;
+                        break;
+                    }
+                    stableCandidate = latest;
+                    stableWidth = geometry[1]; stableHeight = geometry[2];
+                } else stableCandidate = null;
             }
-            LocalRuntimeSmoke.require(replacement != null, "orientation must recreate MainActivity");
+            LocalRuntimeSmoke.require(replacement != null, "orientation must recreate and settle MainActivity");
             current = replacement;
-            stage = previousStage + "/configuration";
-            int actualConfiguration = current.getResources().getConfiguration().orientation;
-            observation = "expected=" + expectedConfiguration + ", actual=" + actualConfiguration;
-            LocalRuntimeSmoke.require(actualConfiguration == expectedConfiguration,
-                    "requested orientation must be applied");
+            if (observedPendingConfiguration)
+                host.evidence.append("OBSERVATION: replacement configuration was pending before it stabilized\n");
             stage = previousStage;
             observation = null;
             pageReady(current);
@@ -188,7 +247,8 @@ final class MobileLayoutAcceptance {
             observation = "dom=" + page.optBoolean("dom") + ", composer=" + page.optBoolean("composer")
                     + ", sameOrigin=" + page.optBoolean("sameOrigin") + ", tokenFree=" + page.optBoolean("tokenFree")
                     + ", top=" + page.optInt("top", -1) + ", bottom=" + page.optInt("bottom", -1)
-                    + ", viewport=" + page.optInt("viewport", -1);
+                    + ", viewport=" + page.optInt("viewport", -1)
+                    + (keyboardRotation ? ", " + keyboardState(activity).describe() : "");
             if (page.optBoolean("ready")) { ready = true; break; }
             SystemClock.sleep(200);
         } while (SystemClock.elapsedRealtime() < deadline);
@@ -206,6 +266,85 @@ final class MobileLayoutAcceptance {
         LocalRuntimeSmoke.require(fullscreen[0], "native runtime controls must stay hidden while WebView is ready");
         stage = previousStage;
         observation = null;
+    }
+
+    private static final class KeyboardState {
+        boolean visible;
+        int imeHeight, keyboardTop, webBottom, webHeight;
+        String describe() {
+            return "imeVisible=" + visible + ", imeHeight=" + imeHeight + ", keyboardTop=" + keyboardTop
+                    + ", webBottom=" + webBottom + ", webHeight=" + webHeight;
+        }
+    }
+
+    private KeyboardState keyboardState(Activity activity) {
+        KeyboardState state = new KeyboardState();
+        host.runOnMainSync(() -> {
+            View decor = activity.getWindow().getDecorView();
+            WebView web = findWebView(decor);
+            if (web != null) {
+                int[] at = new int[2]; web.getLocationOnScreen(at);
+                state.webHeight = web.getHeight(); state.webBottom = at[1] + state.webHeight;
+            }
+            if (android.os.Build.VERSION.SDK_INT >= 30 && decor.getRootWindowInsets() != null) {
+                android.view.WindowInsets insets = decor.getRootWindowInsets();
+                state.visible = insets.isVisible(android.view.WindowInsets.Type.ime());
+                state.imeHeight = insets.getInsets(android.view.WindowInsets.Type.ime()).bottom;
+                state.keyboardTop = activity.getWindowManager().getCurrentWindowMetrics().getBounds().bottom - state.imeHeight;
+            } else {
+                android.graphics.Rect frame = new android.graphics.Rect(); decor.getWindowVisibleDisplayFrame(frame);
+                android.util.DisplayMetrics display = new android.util.DisplayMetrics();
+                activity.getWindowManager().getDefaultDisplay().getRealMetrics(display);
+                state.imeHeight = display.heightPixels - frame.bottom;
+                state.visible = state.imeHeight > 100;
+                state.keyboardTop = frame.bottom;
+            }
+        });
+        return state;
+    }
+
+    private void touchComposer(Activity activity) throws Exception {
+        requestedKeyboard = true;
+        JSONObject point = evaluate(activity, "(()=>{const e=document.querySelector('textarea');if(!e)return {};"
+                + "e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();"
+                + "return {x:((r.left+r.right)/2)*devicePixelRatio,y:((r.top+r.bottom)/2)*devicePixelRatio}})()");
+        final int[] at = new int[2];
+        host.runOnMainSync(() -> findWebView(activity.getWindow().getDecorView()).getLocationOnScreen(at));
+        float x = at[0] + (float)point.getDouble("x"), y = at[1] + (float)point.getDouble("y");
+        long now = SystemClock.uptimeMillis();
+        android.view.MotionEvent down = android.view.MotionEvent.obtain(now, now, android.view.MotionEvent.ACTION_DOWN, x, y, 0);
+        android.view.MotionEvent up = android.view.MotionEvent.obtain(now, now + 80, android.view.MotionEvent.ACTION_UP, x, y, 0);
+        try { host.sendPointerSync(down); host.sendPointerSync(up); }
+        finally { down.recycle(); up.recycle(); }
+    }
+
+    private void keyboardFits(Activity activity) throws Exception {
+        String previousStage = stage;
+        stage = previousStage + "/ime-visible";
+        KeyboardState state;
+        long deadline = SystemClock.elapsedRealtime() + 10000;
+        do {
+            state = keyboardState(activity);
+            observation = state.describe();
+            if (state.visible && state.imeHeight > 100) break;
+            SystemClock.sleep(100);
+        } while (SystemClock.elapsedRealtime() < deadline);
+        LocalRuntimeSmoke.require(state.visible && state.imeHeight > 100,
+                "a docked on-screen keyboard must appear after touching the composer");
+        stage = previousStage + "/ime-bounds";
+        // Do not let an opening animation stand in for the settled layout.
+        deadline = SystemClock.elapsedRealtime() + 5000;
+        do {
+            state = keyboardState(activity);
+            observation = state.describe();
+            if (state.webHeight > 0 && state.webBottom <= state.keyboardTop + 8) break;
+            SystemClock.sleep(100);
+        } while (SystemClock.elapsedRealtime() < deadline);
+        LocalRuntimeSmoke.require(state.visible && state.webHeight > 0 && state.webBottom <= state.keyboardTop + 8,
+                "keyboard must resize the WebView instead of covering its bottom edge");
+        stage = previousStage;
+        observation = null;
+        pageReady(activity);
     }
 
     private void longTextScroll(Activity activity) throws Exception {
