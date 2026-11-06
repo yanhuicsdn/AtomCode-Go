@@ -23,6 +23,7 @@ export PATH="$ROOT/.tools/python/bin:$PATH"
 rustup target add aarch64-unknown-linux-musl
 cargo zigbuild --locked --release -p atomcode-daemon --target aarch64-unknown-linux-musl
 python android/runtime/build.py
+python android/runtime/source_inventory.py
 python -m unittest discover -s android/runtime/tests -v
 
 # JAVA_HOME must select JDK 17+; ANDROID_HOME/ANDROID_SDK_ROOT must identify
@@ -33,6 +34,7 @@ cp android/app/build/outputs/apk/debug/app-debug.apk dist/android/atomcode-go-ar
 cp android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk dist/android/atomcode-go-arm64-smoke-tests.apk
 cp android/runtime/out/arm64-v8a/build-report.json dist/android/build-report.json
 cp android/runtime/dependencies.json dist/android/dependencies.json
+cp android/runtime/out/arm64-v8a/source-inventory.json dist/android/source-inventory.json
 python - <<'PY'
 import hashlib, pathlib
 root = pathlib.Path('dist/android')
