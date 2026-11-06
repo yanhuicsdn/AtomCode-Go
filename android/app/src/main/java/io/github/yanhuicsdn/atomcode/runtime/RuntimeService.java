@@ -18,6 +18,8 @@ public final class RuntimeService extends Service implements RuntimeController.L
     private android.net.ConnectivityManager connectivity;
     private android.net.ConnectivityManager.NetworkCallback network;
     private static final String CHANNEL = "local-runtime";
+    private boolean retiring;
+    private boolean restartAfterDestroy;
 
     @Override public void onCreate() {
         super.onCreate();
@@ -36,8 +38,15 @@ public final class RuntimeService extends Service implements RuntimeController.L
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
-        controller.attachService(this);
         startForeground(1, notification());
+        if (retiring) {
+            // Android can deliver a new start to an instance whose stopSelf()
+            // is still being processed. Finish retiring it before restarting.
+            restartAfterDestroy = intent == null || !STOP.equals(intent.getAction());
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+        controller.attachService(this);
         if (intent != null && STOP.equals(intent.getAction())) controller.stop();
         else {
             wake.acquire(30 * 60 * 1000L);
@@ -61,6 +70,7 @@ public final class RuntimeService extends Service implements RuntimeController.L
 
     @Override public void changed() {
         if (controller.phase == RuntimeController.Phase.STOPPED || controller.phase == RuntimeController.Phase.ERROR) {
+            retiring = true;
             if (wake.isHeld()) wake.release();
             stopForeground(true);
             stopSelf();
@@ -73,6 +83,8 @@ public final class RuntimeService extends Service implements RuntimeController.L
         if (wake.isHeld()) wake.release();
         controller.detachService(this);
         super.onDestroy();
+        if (restartAfterDestroy)
+            getApplicationContext().startForegroundService(new Intent(getApplicationContext(), RuntimeService.class));
     }
     @Override public IBinder onBind(Intent intent) { return null; }
 }
