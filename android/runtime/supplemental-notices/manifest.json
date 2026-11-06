@@ -1,0 +1,859 @@
+{
+  "kind": "atomcode-go-supplemental-notices",
+  "packages": [
+    {
+      "artifact": {
+        "checksumSource": "Cargo.lock",
+        "sha256": "d0f9ee0f6e02ffd7ad5816e9464499fba7b3effd01123b515c41d1697c43dad1",
+        "type": "cargo-crate"
+      },
+      "association": "committed Cargo.lock checksum matches cached published crate containing this exact .cargo_vcs_info.json; licenses fetched from its repository at that commit",
+      "ecosystem": "cargo",
+      "licenses": [
+        {
+          "bytes": 1091,
+          "commit": "269174b4be20e3cfcbb7e7fa4d7d9596183e287b",
+          "file": "texts/88d1e3160df48926ad3310a8ec5699b502889565908f1be7e77cd21282c7a709.txt",
+          "finalURL": "https://raw.githubusercontent.com/Nullus157/async-compression/269174b4be20e3cfcbb7e7fa4d7d9596183e287b/LICENSE-MIT",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE-MIT",
+          "repository": "Nullus157/async-compression",
+          "sha256": "88d1e3160df48926ad3310a8ec5699b502889565908f1be7e77cd21282c7a709",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/Nullus157/async-compression/269174b4be20e3cfcbb7e7fa4d7d9596183e287b/LICENSE-MIT"
+        },
+        {
+          "bytes": 10847,
+          "commit": "269174b4be20e3cfcbb7e7fa4d7d9596183e287b",
+          "file": "texts/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+          "finalURL": "https://raw.githubusercontent.com/Nullus157/async-compression/269174b4be20e3cfcbb7e7fa4d7d9596183e287b/LICENSE-APACHE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE-APACHE",
+          "repository": "Nullus157/async-compression",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/Nullus157/async-compression/269174b4be20e3cfcbb7e7fa4d7d9596183e287b/LICENSE-APACHE"
+        }
+      ],
+      "name": "async-compression",
+      "publishedVcsInfo": {
+        "bytes": 118,
+        "file": "evidence/211f136adf8591766605ba6378219e1d660e991e315e4628955e5bd86e8e1a8f.json",
+        "originArtifactSha256": "d0f9ee0f6e02ffd7ad5816e9464499fba7b3effd01123b515c41d1697c43dad1",
+        "originalPath": "async-compression-0.4.41/.cargo_vcs_info.json",
+        "sha256": "211f136adf8591766605ba6378219e1d660e991e315e4628955e5bd86e8e1a8f"
+      },
+      "status": "resolved",
+      "upstream": {
+        "commit": "269174b4be20e3cfcbb7e7fa4d7d9596183e287b",
+        "pathInVcs": "crates/async-compression",
+        "repository": "Nullus157/async-compression"
+      },
+      "version": "0.4.41"
+    },
+    {
+      "artifact": {
+        "checksumSource": "Cargo.lock",
+        "sha256": "eb7b51a7d9c967fc26773061ba86150f19c50c0d65c887cb1fbe295fd16619b7",
+        "type": "cargo-crate"
+      },
+      "association": "committed Cargo.lock checksum matches cached published crate containing this exact .cargo_vcs_info.json; licenses fetched from its repository at that commit",
+      "ecosystem": "cargo",
+      "licenses": [
+        {
+          "bytes": 1091,
+          "commit": "9d848a02f13f3a56542e4123be8947a8da06097e",
+          "file": "texts/88d1e3160df48926ad3310a8ec5699b502889565908f1be7e77cd21282c7a709.txt",
+          "finalURL": "https://raw.githubusercontent.com/Nullus157/async-compression/9d848a02f13f3a56542e4123be8947a8da06097e/LICENSE-MIT",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE-MIT",
+          "repository": "Nullus157/async-compression",
+          "sha256": "88d1e3160df48926ad3310a8ec5699b502889565908f1be7e77cd21282c7a709",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/Nullus157/async-compression/9d848a02f13f3a56542e4123be8947a8da06097e/LICENSE-MIT"
+        },
+        {
+          "bytes": 10847,
+          "commit": "9d848a02f13f3a56542e4123be8947a8da06097e",
+          "file": "texts/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+          "finalURL": "https://raw.githubusercontent.com/Nullus157/async-compression/9d848a02f13f3a56542e4123be8947a8da06097e/LICENSE-APACHE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE-APACHE",
+          "repository": "Nullus157/async-compression",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/Nullus157/async-compression/9d848a02f13f3a56542e4123be8947a8da06097e/LICENSE-APACHE"
+        }
+      ],
+      "name": "compression-codecs",
+      "publishedVcsInfo": {
+        "bytes": 119,
+        "file": "evidence/77de35184bd0896b9756509c9f2cd47b5ea987a33b24b7a9c624ed773286266d.json",
+        "originArtifactSha256": "eb7b51a7d9c967fc26773061ba86150f19c50c0d65c887cb1fbe295fd16619b7",
+        "originalPath": "compression-codecs-0.4.37/.cargo_vcs_info.json",
+        "sha256": "77de35184bd0896b9756509c9f2cd47b5ea987a33b24b7a9c624ed773286266d"
+      },
+      "status": "resolved",
+      "upstream": {
+        "commit": "9d848a02f13f3a56542e4123be8947a8da06097e",
+        "pathInVcs": "crates/compression-codecs",
+        "repository": "Nullus157/async-compression"
+      },
+      "version": "0.4.37"
+    },
+    {
+      "artifact": {
+        "checksumSource": "Cargo.lock",
+        "sha256": "75984efb6ed102a0d42db99afb6c1948f0380d1d91808d5529916e6c08b49d8d",
+        "type": "cargo-crate"
+      },
+      "association": "committed Cargo.lock checksum matches cached published crate containing this exact .cargo_vcs_info.json; licenses fetched from its repository at that commit",
+      "ecosystem": "cargo",
+      "licenses": [
+        {
+          "bytes": 1091,
+          "commit": "2a28343998e67ea519b87005b9d295b134c00dd0",
+          "file": "texts/88d1e3160df48926ad3310a8ec5699b502889565908f1be7e77cd21282c7a709.txt",
+          "finalURL": "https://raw.githubusercontent.com/Nullus157/async-compression/2a28343998e67ea519b87005b9d295b134c00dd0/LICENSE-MIT",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE-MIT",
+          "repository": "Nullus157/async-compression",
+          "sha256": "88d1e3160df48926ad3310a8ec5699b502889565908f1be7e77cd21282c7a709",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/Nullus157/async-compression/2a28343998e67ea519b87005b9d295b134c00dd0/LICENSE-MIT"
+        },
+        {
+          "bytes": 10847,
+          "commit": "2a28343998e67ea519b87005b9d295b134c00dd0",
+          "file": "texts/a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2.txt",
+          "finalURL": "https://raw.githubusercontent.com/Nullus157/async-compression/2a28343998e67ea519b87005b9d295b134c00dd0/LICENSE-APACHE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE-APACHE",
+          "repository": "Nullus157/async-compression",
+          "sha256": "a60eea817514531668d7e00765731449fe14d059d3249e0bc93b36de45f759f2",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/Nullus157/async-compression/2a28343998e67ea519b87005b9d295b134c00dd0/LICENSE-APACHE"
+        }
+      ],
+      "name": "compression-core",
+      "publishedVcsInfo": {
+        "bytes": 117,
+        "file": "evidence/4bed1686b346d17ba3b8c52a6a6bd16163994853a6f52e159edfeeb9edeb3602.json",
+        "originArtifactSha256": "75984efb6ed102a0d42db99afb6c1948f0380d1d91808d5529916e6c08b49d8d",
+        "originalPath": "compression-core-0.4.31/.cargo_vcs_info.json",
+        "sha256": "4bed1686b346d17ba3b8c52a6a6bd16163994853a6f52e159edfeeb9edeb3602"
+      },
+      "status": "resolved",
+      "upstream": {
+        "commit": "2a28343998e67ea519b87005b9d295b134c00dd0",
+        "pathInVcs": "crates/compression-core",
+        "repository": "Nullus157/async-compression"
+      },
+      "version": "0.4.31"
+    },
+    {
+      "artifact": {
+        "checksumSource": "Cargo.lock",
+        "sha256": "df2196ea9d47b4ab4a31b9297eaa5a5d19a0b121dceb9f118f6790ad0ab94743",
+        "type": "cargo-crate"
+      },
+      "association": "committed Cargo.lock checksum matches cached published crate containing this exact .cargo_vcs_info.json; licenses fetched from its repository at that commit",
+      "ecosystem": "cargo",
+      "licenses": [
+        {
+          "bytes": 1080,
+          "commit": "f41e1a044c8a84ea9fa8577fdd2eab92ec96de02",
+          "file": "texts/2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1.txt",
+          "finalURL": "https://raw.githubusercontent.com/tree-sitter/tree-sitter-cpp/f41e1a044c8a84ea9fa8577fdd2eab92ec96de02/LICENSE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE",
+          "repository": "tree-sitter/tree-sitter-cpp",
+          "sha256": "2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/tree-sitter/tree-sitter-cpp/f41e1a044c8a84ea9fa8577fdd2eab92ec96de02/LICENSE"
+        }
+      ],
+      "name": "tree-sitter-cpp",
+      "publishedVcsInfo": {
+        "bytes": 94,
+        "file": "evidence/f9a050f5cb8c2f397dc206872dccf24ed375737d6bc73ff0e3a1a061fea04a1c.json",
+        "originArtifactSha256": "df2196ea9d47b4ab4a31b9297eaa5a5d19a0b121dceb9f118f6790ad0ab94743",
+        "originalPath": "tree-sitter-cpp-0.23.4/.cargo_vcs_info.json",
+        "sha256": "f9a050f5cb8c2f397dc206872dccf24ed375737d6bc73ff0e3a1a061fea04a1c"
+      },
+      "status": "resolved",
+      "upstream": {
+        "commit": "f41e1a044c8a84ea9fa8577fdd2eab92ec96de02",
+        "pathInVcs": "",
+        "repository": "tree-sitter/tree-sitter-cpp"
+      },
+      "version": "0.23.4"
+    },
+    {
+      "artifact": {
+        "checksumSource": "Cargo.lock",
+        "sha256": "261b708e5d92061ede329babaaa427b819329a9d427a1d710abb0f67bbef63ee",
+        "type": "cargo-crate"
+      },
+      "association": "committed Cargo.lock checksum matches cached published crate containing this exact .cargo_vcs_info.json; licenses fetched from its repository at that commit",
+      "ecosystem": "cargo",
+      "licenses": [
+        {
+          "bytes": 1080,
+          "commit": "5a5ca8551a179998360b4a4ca2c0f366a35acc03",
+          "file": "texts/2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1.txt",
+          "finalURL": "https://raw.githubusercontent.com/tree-sitter/tree-sitter-html/5a5ca8551a179998360b4a4ca2c0f366a35acc03/LICENSE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE",
+          "repository": "tree-sitter/tree-sitter-html",
+          "sha256": "2e0110e07abef7c2548b26ec9d6969775617ca539a0dc8dbeeb14d6452c711d1",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/tree-sitter/tree-sitter-html/5a5ca8551a179998360b4a4ca2c0f366a35acc03/LICENSE"
+        }
+      ],
+      "name": "tree-sitter-html",
+      "publishedVcsInfo": {
+        "bytes": 94,
+        "file": "evidence/ca9170bf5a6587c2a8df2e280d5fb0c77d7427a4551dfac38bd0aab8946724d5.json",
+        "originArtifactSha256": "261b708e5d92061ede329babaaa427b819329a9d427a1d710abb0f67bbef63ee",
+        "originalPath": "tree-sitter-html-0.23.2/.cargo_vcs_info.json",
+        "sha256": "ca9170bf5a6587c2a8df2e280d5fb0c77d7427a4551dfac38bd0aab8946724d5"
+      },
+      "status": "resolved",
+      "upstream": {
+        "commit": "5a5ca8551a179998360b4a4ca2c0f366a35acc03",
+        "pathInVcs": "",
+        "repository": "tree-sitter/tree-sitter-html"
+      },
+      "version": "0.23.2"
+    },
+    {
+      "artifact": {
+        "checksumSource": "Cargo.lock",
+        "sha256": "0aa6cbcdc8c679b214e616fd3300da67da0e492e066df01bcf5a5921a71e90d6",
+        "type": "cargo-crate"
+      },
+      "association": "committed Cargo.lock checksum matches cached published crate containing this exact .cargo_vcs_info.json; licenses fetched from its repository at that commit",
+      "ecosystem": "cargo",
+      "licenses": [
+        {
+          "bytes": 1069,
+          "commit": "94703d5a6bed02b98e438d7cad1136c01a60ba2c",
+          "file": "texts/52ed137b039cd9c46409bc22e89938af911c95b157feae2d040b51e6084369a7.txt",
+          "finalURL": "https://raw.githubusercontent.com/tree-sitter/tree-sitter-java/94703d5a6bed02b98e438d7cad1136c01a60ba2c/LICENSE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE",
+          "repository": "tree-sitter/tree-sitter-java",
+          "sha256": "52ed137b039cd9c46409bc22e89938af911c95b157feae2d040b51e6084369a7",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/tree-sitter/tree-sitter-java/94703d5a6bed02b98e438d7cad1136c01a60ba2c/LICENSE"
+        }
+      ],
+      "name": "tree-sitter-java",
+      "publishedVcsInfo": {
+        "bytes": 94,
+        "file": "evidence/373985672a4213b3550b6d0fd47389c25ce866ca050c47e8f5ceb7841621bcb6.json",
+        "originArtifactSha256": "0aa6cbcdc8c679b214e616fd3300da67da0e492e066df01bcf5a5921a71e90d6",
+        "originalPath": "tree-sitter-java-0.23.5/.cargo_vcs_info.json",
+        "sha256": "373985672a4213b3550b6d0fd47389c25ce866ca050c47e8f5ceb7841621bcb6"
+      },
+      "status": "resolved",
+      "upstream": {
+        "commit": "94703d5a6bed02b98e438d7cad1136c01a60ba2c",
+        "pathInVcs": "",
+        "repository": "tree-sitter/tree-sitter-java"
+      },
+      "version": "0.23.5"
+    },
+    {
+      "artifact": {
+        "checksumSource": "Cargo.lock",
+        "sha256": "6c5f76ed8d947a75cc446d5fccd8b602ebf0cde64ccf2ffa434d873d7a575eff",
+        "type": "cargo-crate"
+      },
+      "association": "committed Cargo.lock checksum matches cached published crate containing this exact .cargo_vcs_info.json; licenses fetched from its repository at that commit",
+      "ecosystem": "cargo",
+      "licenses": [
+        {
+          "bytes": 1080,
+          "commit": "f975a621f4e7f532fe322e13c4f79495e0a7b2e7",
+          "file": "texts/49bf33cf78ef5897e4e161ce1517df7de1ae5042a65b6bcfd44401e0fc606559.txt",
+          "finalURL": "https://raw.githubusercontent.com/tree-sitter/tree-sitter-typescript/f975a621f4e7f532fe322e13c4f79495e0a7b2e7/LICENSE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE",
+          "repository": "tree-sitter/tree-sitter-typescript",
+          "sha256": "49bf33cf78ef5897e4e161ce1517df7de1ae5042a65b6bcfd44401e0fc606559",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/tree-sitter/tree-sitter-typescript/f975a621f4e7f532fe322e13c4f79495e0a7b2e7/LICENSE"
+        }
+      ],
+      "name": "tree-sitter-typescript",
+      "publishedVcsInfo": {
+        "bytes": 94,
+        "file": "evidence/e4fa0597518b944f116182165bc8b0c99e2d53f1c1a6df40a75024d5ffc560ee.json",
+        "originArtifactSha256": "6c5f76ed8d947a75cc446d5fccd8b602ebf0cde64ccf2ffa434d873d7a575eff",
+        "originalPath": "tree-sitter-typescript-0.23.2/.cargo_vcs_info.json",
+        "sha256": "e4fa0597518b944f116182165bc8b0c99e2d53f1c1a6df40a75024d5ffc560ee"
+      },
+      "status": "resolved",
+      "upstream": {
+        "commit": "f975a621f4e7f532fe322e13c4f79495e0a7b2e7",
+        "pathInVcs": "",
+        "repository": "tree-sitter/tree-sitter-typescript"
+      },
+      "version": "0.23.2"
+    },
+    {
+      "artifact": {
+        "integrity": "sha512-iKnFXr7NkdZAIHiIWE+BX5ULi/ucVFYWD6TbAV+rZctiRTY2PL6tsIKhoIOaoskiWAkgu+VsbXgUVDNLHf+InQ==",
+        "sha1": "e6c6c3aba0744edce3fb2074922d3776c0af2a6d",
+        "sha256": "10e1517f96aad789299256bd53aeb81e2f3fb113f1ce6ce885d20bbbba6e445c",
+        "type": "npm-tarball",
+        "url": "https://registry.npmjs.org/@rollup/pluginutils/-/pluginutils-4.2.1.tgz"
+      },
+      "association": "exact pluginutils-v4.2.1 release tag resolves to b87fd30d63fcf51190035f88fa6ab54fb2d11170; packages/pluginutils/package.json confirms name/version and source repository; root LICENSE original fetched",
+      "dev": true,
+      "ecosystem": "npm",
+      "evidence": [
+        {
+          "bytes": 377,
+          "file": "evidence/2f35be9c4ccf963bb95b3a7e08b3bb59331cde431b0501e147ed94f54024caf3.json",
+          "finalURL": "https://api.github.com/repos/rollup/plugins/git/ref/tags/pluginutils-v4.2.1",
+          "httpStatus": 200,
+          "kind": "tag",
+          "releaseTag": "pluginutils-v4.2.1",
+          "repository": "rollup/plugins",
+          "sha256": "2f35be9c4ccf963bb95b3a7e08b3bb59331cde431b0501e147ed94f54024caf3",
+          "status": "fetched",
+          "url": "https://api.github.com/repos/rollup/plugins/git/ref/tags/pluginutils-v4.2.1"
+        },
+        {
+          "bytes": 2253,
+          "commit": "b87fd30d63fcf51190035f88fa6ab54fb2d11170",
+          "file": "evidence/1c7c82a955b73648dc52933a084db896b3c0e347de88289e72c6e5ab334dc1e4.json",
+          "finalURL": "https://raw.githubusercontent.com/rollup/plugins/b87fd30d63fcf51190035f88fa6ab54fb2d11170/packages/pluginutils/package.json",
+          "httpStatus": 200,
+          "kind": "metadata",
+          "path": "packages/pluginutils/package.json",
+          "repository": "rollup/plugins",
+          "sha256": "1c7c82a955b73648dc52933a084db896b3c0e347de88289e72c6e5ab334dc1e4",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/rollup/plugins/b87fd30d63fcf51190035f88fa6ab54fb2d11170/packages/pluginutils/package.json"
+        }
+      ],
+      "licenses": [
+        {
+          "bytes": 1151,
+          "commit": "b87fd30d63fcf51190035f88fa6ab54fb2d11170",
+          "file": "texts/7b8136f76c483d03597500bfa991aae9be68d4629e1121cbf9b93aa727efe305.txt",
+          "finalURL": "https://raw.githubusercontent.com/rollup/plugins/b87fd30d63fcf51190035f88fa6ab54fb2d11170/LICENSE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE",
+          "repository": "rollup/plugins",
+          "sha256": "7b8136f76c483d03597500bfa991aae9be68d4629e1121cbf9b93aa727efe305",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/rollup/plugins/b87fd30d63fcf51190035f88fa6ab54fb2d11170/LICENSE"
+        }
+      ],
+      "lockPath": "node_modules/@prefresh/vite/node_modules/@rollup/pluginutils",
+      "name": "@rollup/pluginutils",
+      "officialMetadata": {
+        "bytes": 3789,
+        "file": "evidence/6f8001dca76357c5e3db8f74313ce8a23ed0f16f3b1400de7c021d039a5faf5f.json",
+        "finalURL": "https://registry.npmjs.org/@rollup%2Fpluginutils/4.2.1",
+        "httpStatus": 200,
+        "kind": "version-metadata",
+        "sha256": "6f8001dca76357c5e3db8f74313ce8a23ed0f16f3b1400de7c021d039a5faf5f",
+        "status": "fetched",
+        "url": "https://registry.npmjs.org/@rollup%2Fpluginutils/4.2.1"
+      },
+      "status": "resolved",
+      "upstream": {
+        "commit": "b87fd30d63fcf51190035f88fa6ab54fb2d11170",
+        "repository": "rollup/plugins",
+        "sourcePackageName": "@rollup/pluginutils",
+        "sourcePackagePath": "packages/pluginutils/package.json"
+      },
+      "version": "4.2.1"
+    },
+    {
+      "artifact": {
+        "integrity": "sha512-qslZrXnKJU4cUpjoAmtAo/KQM9e2IRMlmpig6Zpwj+8KWxW8v+nkAf9216Bsek9lOC1jvg2yCjygCFo2f83msQ==",
+        "sha1": "d188fd77cdb2b6dc140011a573203e374fdba2d8",
+        "sha256": "73ecc172198bb2e50581fc85518fd23875cc683c4c38c7a0c5f16bad20de8fc5",
+        "type": "npm-tarball",
+        "url": "https://registry.npmjs.org/@rolldown/binding-darwin-arm64/-/binding-darwin-arm64-1.2.16.tgz"
+      },
+      "association": "exact v1.2.16 tag, source package version, and official npm provenance payload agree on de6facf2228279718e042b801dd6b60dd6503918; fetched root LICENSE/THIRD-PARTY-LICENSE match the installed same-version rolldown parent texts",
+      "dev": true,
+      "ecosystem": "npm",
+      "evidence": [
+        {
+          "bytes": 339,
+          "file": "evidence/8bc3233697a9c455a98f56e761554ade68cbc2a60151fb16af56a4f685a84aad.json",
+          "finalURL": "https://api.github.com/repos/rolldown/rolldown/git/ref/tags/v1.2.16",
+          "httpStatus": 200,
+          "kind": "tag",
+          "releaseTag": "v1.2.16",
+          "repository": "rolldown/rolldown",
+          "sha256": "8bc3233697a9c455a98f56e761554ade68cbc2a60151fb16af56a4f685a84aad",
+          "status": "fetched",
+          "url": "https://api.github.com/repos/rolldown/rolldown/git/ref/tags/v1.2.16"
+        },
+        {
+          "bytes": 14717,
+          "file": "evidence/4859c16ef955010627f8a5ca70e7d3d19096dc46fbbf86c7ea06bc3eadf0a4f0.json",
+          "finalURL": "https://registry.npmjs.org/-/npm/v1/attestations/@rolldown%2fbinding-darwin-arm64@1.2.16",
+          "httpStatus": 200,
+          "kind": "attestation",
+          "sha256": "4859c16ef955010627f8a5ca70e7d3d19096dc46fbbf86c7ea06bc3eadf0a4f0",
+          "status": "fetched",
+          "url": "https://registry.npmjs.org/-/npm/v1/attestations/@rolldown%2fbinding-darwin-arm64@1.2.16"
+        },
+        {
+          "bytes": 6793,
+          "commit": "de6facf2228279718e042b801dd6b60dd6503918",
+          "file": "evidence/892c3b4c42d43c1f0d16a35286cce8d839af1f65affd38f62a9e63ad63783ed8.json",
+          "finalURL": "https://raw.githubusercontent.com/rolldown/rolldown/de6facf2228279718e042b801dd6b60dd6503918/packages/rolldown/package.json",
+          "httpStatus": 200,
+          "kind": "metadata",
+          "path": "packages/rolldown/package.json",
+          "repository": "rolldown/rolldown",
+          "sha256": "892c3b4c42d43c1f0d16a35286cce8d839af1f65affd38f62a9e63ad63783ed8",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/rolldown/rolldown/de6facf2228279718e042b801dd6b60dd6503918/packages/rolldown/package.json"
+        }
+      ],
+      "licenses": [
+        {
+          "bytes": 1302,
+          "commit": "de6facf2228279718e042b801dd6b60dd6503918",
+          "file": "texts/23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734.txt",
+          "finalURL": "https://raw.githubusercontent.com/rolldown/rolldown/de6facf2228279718e042b801dd6b60dd6503918/LICENSE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE",
+          "repository": "rolldown/rolldown",
+          "sha256": "23ecfff35a5a2e80d92142f75228912c3b1abc4b5a8337a821ff4397e2f9f734",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/rolldown/rolldown/de6facf2228279718e042b801dd6b60dd6503918/LICENSE"
+        },
+        {
+          "bytes": 2209,
+          "commit": "de6facf2228279718e042b801dd6b60dd6503918",
+          "file": "texts/a877291d800ed43692f3f9ae09d8e01cc6f7293ad39d43896059c188ffbb8b7c.txt",
+          "finalURL": "https://raw.githubusercontent.com/rolldown/rolldown/de6facf2228279718e042b801dd6b60dd6503918/THIRD-PARTY-LICENSE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "THIRD-PARTY-LICENSE",
+          "repository": "rolldown/rolldown",
+          "sha256": "a877291d800ed43692f3f9ae09d8e01cc6f7293ad39d43896059c188ffbb8b7c",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/rolldown/rolldown/de6facf2228279718e042b801dd6b60dd6503918/THIRD-PARTY-LICENSE"
+        }
+      ],
+      "lockPath": "node_modules/@rolldown/binding-darwin-arm64",
+      "name": "@rolldown/binding-darwin-arm64",
+      "officialMetadata": {
+        "bytes": 2156,
+        "file": "evidence/16823ad5dd677d354de1baa5696d83d85d7d31b61675c9601a32850f149fa7e9.json",
+        "finalURL": "https://registry.npmjs.org/@rolldown%2Fbinding-darwin-arm64/1.2.16",
+        "httpStatus": 200,
+        "kind": "version-metadata",
+        "sha256": "16823ad5dd677d354de1baa5696d83d85d7d31b61675c9601a32850f149fa7e9",
+        "status": "fetched",
+        "url": "https://registry.npmjs.org/@rolldown%2Fbinding-darwin-arm64/1.2.16"
+      },
+      "status": "resolved",
+      "upstream": {
+        "commit": "de6facf2228279718e042b801dd6b60dd6503918",
+        "repository": "rolldown/rolldown",
+        "sourcePackageName": "rolldown",
+        "sourcePackagePath": "packages/rolldown/package.json"
+      },
+      "version": "1.2.16"
+    },
+    {
+      "artifact": {
+        "integrity": "sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==",
+        "sha1": "68dff5fbe60c51eb37725ea9e3ed310dcc1e776e",
+        "sha256": "69628ff8092c5ff940ea4a0f29da98d520615bae138755c9e059033606c6caa8",
+        "type": "npm-tarball",
+        "url": "https://registry.npmjs.org/boolbase/-/boolbase-1.0.0.tgz"
+      },
+      "association": "official exact-version metadata has no gitHead; exact release-tag lookups v1.0.0 and 1.0.0 both returned 404; no original full ISC notice established",
+      "dev": true,
+      "ecosystem": "npm",
+      "evidence": [
+        {
+          "errorType": "HTTPError",
+          "httpStatus": 404,
+          "kind": "tag",
+          "releaseTag": "v1.0.0",
+          "repository": "fb55/boolbase",
+          "status": "unresolved",
+          "url": "https://api.github.com/repos/fb55/boolbase/git/ref/tags/v1.0.0"
+        },
+        {
+          "errorType": "HTTPError",
+          "httpStatus": 404,
+          "kind": "tag",
+          "releaseTag": "1.0.0",
+          "repository": "fb55/boolbase",
+          "status": "unresolved",
+          "url": "https://api.github.com/repos/fb55/boolbase/git/ref/tags/1.0.0"
+        }
+      ],
+      "licenses": [],
+      "lockPath": "node_modules/boolbase",
+      "name": "boolbase",
+      "officialMetadata": {
+        "bytes": 1083,
+        "file": "evidence/cdbdd0892df76fdcb117aa6c87cef12aeb99225cb90b8e12f182f3f6f1efce3b.json",
+        "finalURL": "https://registry.npmjs.org/boolbase/1.0.0",
+        "httpStatus": 200,
+        "kind": "version-metadata",
+        "sha256": "cdbdd0892df76fdcb117aa6c87cef12aeb99225cb90b8e12f182f3f6f1efce3b",
+        "status": "fetched",
+        "url": "https://registry.npmjs.org/boolbase/1.0.0"
+      },
+      "status": "unresolved",
+      "unresolvedReason": "official exact-version metadata has no gitHead; exact release-tag lookups v1.0.0 and 1.0.0 both returned 404; no original full ISC notice established",
+      "upstream": {
+        "commit": null,
+        "repository": "fb55/boolbase"
+      },
+      "version": "1.0.0"
+    },
+    {
+      "artifact": {
+        "integrity": "sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==",
+        "sha1": "5c198a8a11453596e751494d49874bc7732f2e79",
+        "sha256": "7c316193a4d49e70b3f552e4d52573ecb5b8154075f049cb30c9c2dc9ebb7c90",
+        "type": "npm-tarball",
+        "url": "https://registry.npmjs.org/dlv/-/dlv-1.1.3.tgz"
+      },
+      "association": "published source commit root tree has no original LICENSE text; README/SPDX is not a full notice; no generic template substituted",
+      "dev": true,
+      "ecosystem": "npm",
+      "evidence": [
+        {
+          "bytes": 794,
+          "commit": "e636db817a96e4ca4710b407163fb992748b3b80",
+          "file": "evidence/d0355a98f75d3547e341ff1cbade270c5d5e9b109dd2b03163178c58b8d525d2.json",
+          "finalURL": "https://raw.githubusercontent.com/developit/dlv/e636db817a96e4ca4710b407163fb992748b3b80/package.json",
+          "httpStatus": 200,
+          "kind": "metadata",
+          "path": "package.json",
+          "repository": "developit/dlv",
+          "sha256": "d0355a98f75d3547e341ff1cbade270c5d5e9b109dd2b03163178c58b8d525d2",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/developit/dlv/e636db817a96e4ca4710b407163fb992748b3b80/package.json"
+        },
+        {
+          "bytes": 1460,
+          "commit": "e636db817a96e4ca4710b407163fb992748b3b80",
+          "file": "evidence/ebacde9239546c979dff6150562e027f94b466be9799bfe650f3b4d3279dd9e4.json",
+          "finalURL": "https://api.github.com/repos/developit/dlv/git/trees/e636db817a96e4ca4710b407163fb992748b3b80",
+          "httpStatus": 200,
+          "kind": "root-tree",
+          "repository": "developit/dlv",
+          "sha256": "ebacde9239546c979dff6150562e027f94b466be9799bfe650f3b4d3279dd9e4",
+          "status": "fetched",
+          "url": "https://api.github.com/repos/developit/dlv/git/trees/e636db817a96e4ca4710b407163fb992748b3b80"
+        }
+      ],
+      "licenses": [],
+      "lockPath": "node_modules/dlv",
+      "name": "dlv",
+      "officialMetadata": {
+        "bytes": 2584,
+        "file": "evidence/4203b1373bc97e4132afa78a94503a14d6952329544bc20460d4188664348105.json",
+        "finalURL": "https://registry.npmjs.org/dlv/1.1.3",
+        "httpStatus": 200,
+        "kind": "version-metadata",
+        "sha256": "4203b1373bc97e4132afa78a94503a14d6952329544bc20460d4188664348105",
+        "status": "fetched",
+        "url": "https://registry.npmjs.org/dlv/1.1.3"
+      },
+      "sourceFiles": [
+        {
+          "bytes": 2020,
+          "file": "evidence/9c859d9401ff1e3c62d84595ae8fb368787a6e89cd819b811be06abb2cde26db.txt",
+          "path": "README.md",
+          "sha256": "9c859d9401ff1e3c62d84595ae8fb368787a6e89cd819b811be06abb2cde26db"
+        },
+        {
+          "bytes": 794,
+          "file": "evidence/d0355a98f75d3547e341ff1cbade270c5d5e9b109dd2b03163178c58b8d525d2.json",
+          "path": "package.json",
+          "sha256": "d0355a98f75d3547e341ff1cbade270c5d5e9b109dd2b03163178c58b8d525d2"
+        },
+        {
+          "bytes": 207,
+          "file": "evidence/621dcd396a2ae770327bfaca6f1ecd0efc7b33c06d28350d373be0f7714e0794.txt",
+          "path": "index.js",
+          "sha256": "621dcd396a2ae770327bfaca6f1ecd0efc7b33c06d28350d373be0f7714e0794"
+        }
+      ],
+      "status": "unresolved",
+      "unresolvedReason": "published source commit root tree has no original LICENSE text; README/SPDX is not a full notice; no generic template substituted",
+      "upstream": {
+        "commit": "e636db817a96e4ca4710b407163fb992748b3b80",
+        "repository": "developit/dlv"
+      },
+      "version": "1.1.3"
+    },
+    {
+      "artifact": {
+        "integrity": "sha512-SteAkCtRuSCDYPGHKhLV/dDs5Bk+7I4QUxWxfk4xwsTI1rQk8MQyYtpGcd3NECsUGzK0q2/KqoVS+YHCqKHUTQ==",
+        "sha1": "88ff9de4e243c3294461f96248930a571288faf8",
+        "sha256": "ea1419e577dd943907c7e17a99fa7a76143d99c6279a6131e79fb4b1b098ac89",
+        "type": "npm-tarball",
+        "url": "https://registry.npmjs.org/lightningcss-wasm/-/lightningcss-wasm-1.32.0.tgz"
+      },
+      "association": "official metadata gitHead 7f8a861bdee476fe90c89a8badeb3fd33a99c51a; source lightningcss@1.32.0 package plus scripts/build-wasm.js explicitly renames to lightningcss-wasm and bundles napi-wasm; npm alias lock path is not treated as the published name",
+      "dev": true,
+      "ecosystem": "npm",
+      "evidence": [
+        {
+          "bytes": 3309,
+          "commit": "7f8a861bdee476fe90c89a8badeb3fd33a99c51a",
+          "file": "evidence/d0d4d6fb6e8899c8c83c4edc4b5b4ab3c88bf525ad716ac662d03ca696877ecf.json",
+          "finalURL": "https://raw.githubusercontent.com/parcel-bundler/lightningcss/7f8a861bdee476fe90c89a8badeb3fd33a99c51a/package.json",
+          "httpStatus": 200,
+          "kind": "metadata",
+          "path": "package.json",
+          "repository": "parcel-bundler/lightningcss",
+          "sha256": "d0d4d6fb6e8899c8c83c4edc4b5b4ab3c88bf525ad716ac662d03ca696877ecf",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/parcel-bundler/lightningcss/7f8a861bdee476fe90c89a8badeb3fd33a99c51a/package.json"
+        },
+        {
+          "bytes": 3056,
+          "commit": "7f8a861bdee476fe90c89a8badeb3fd33a99c51a",
+          "file": "evidence/dc19e190900faa47e078415e3899aa5a200d0b27b161aa001e9df1c56972265c.txt",
+          "finalURL": "https://raw.githubusercontent.com/parcel-bundler/lightningcss/7f8a861bdee476fe90c89a8badeb3fd33a99c51a/scripts/build-wasm.js",
+          "httpStatus": 200,
+          "kind": "metadata",
+          "path": "scripts/build-wasm.js",
+          "repository": "parcel-bundler/lightningcss",
+          "sha256": "dc19e190900faa47e078415e3899aa5a200d0b27b161aa001e9df1c56972265c",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/parcel-bundler/lightningcss/7f8a861bdee476fe90c89a8badeb3fd33a99c51a/scripts/build-wasm.js"
+        }
+      ],
+      "licenses": [
+        {
+          "bytes": 15648,
+          "commit": "7f8a861bdee476fe90c89a8badeb3fd33a99c51a",
+          "file": "texts/5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e.txt",
+          "finalURL": "https://raw.githubusercontent.com/parcel-bundler/lightningcss/7f8a861bdee476fe90c89a8badeb3fd33a99c51a/LICENSE",
+          "httpStatus": 200,
+          "kind": "license",
+          "path": "LICENSE",
+          "repository": "parcel-bundler/lightningcss",
+          "sha256": "5eba353fe5076ac3432177f8ab1cf75e3afcd0584251e37c3bfead5f447d040e",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/parcel-bundler/lightningcss/7f8a861bdee476fe90c89a8badeb3fd33a99c51a/LICENSE"
+        }
+      ],
+      "lockPath": "node_modules/lightningcss",
+      "name": "lightningcss-wasm",
+      "officialMetadata": {
+        "bytes": 1925,
+        "file": "evidence/a73509a6542bc435dd21a3547da5da07167e814c63a27fa6c89c5a519cfc49c8.json",
+        "finalURL": "https://registry.npmjs.org/lightningcss-wasm/1.32.0",
+        "httpStatus": 200,
+        "kind": "version-metadata",
+        "sha256": "a73509a6542bc435dd21a3547da5da07167e814c63a27fa6c89c5a519cfc49c8",
+        "status": "fetched",
+        "url": "https://registry.npmjs.org/lightningcss-wasm/1.32.0"
+      },
+      "status": "resolved",
+      "upstream": {
+        "commit": "7f8a861bdee476fe90c89a8badeb3fd33a99c51a",
+        "repository": "parcel-bundler/lightningcss",
+        "sourcePackageName": "lightningcss",
+        "sourcePackagePath": "package.json"
+      },
+      "version": "1.32.0"
+    },
+    {
+      "artifact": {
+        "members": [
+          {
+            "bytes": 42418,
+            "evidence": {
+              "bytes": 42418,
+              "file": "evidence/ad46aa59b86c852819ba521cdbde18348467e448ce4e466e83e53ea60896bc8d.txt",
+              "sha256": "ad46aa59b86c852819ba521cdbde18348467e448ce4e466e83e53ea60896bc8d"
+            },
+            "installedBytesMatch": true,
+            "member": "package/node_modules/napi-wasm/index.js",
+            "sha256": "ad46aa59b86c852819ba521cdbde18348467e448ce4e466e83e53ea60896bc8d"
+          },
+          {
+            "bytes": 810,
+            "evidence": {
+              "bytes": 810,
+              "file": "evidence/979a10d090dc49549d31ee206b60863950712145a3bebf9fe21a0919e8ca77a1.json",
+              "sha256": "979a10d090dc49549d31ee206b60863950712145a3bebf9fe21a0919e8ca77a1"
+            },
+            "installedBytesMatch": true,
+            "member": "package/node_modules/napi-wasm/package.json",
+            "sha256": "979a10d090dc49549d31ee206b60863950712145a3bebf9fe21a0919e8ca77a1"
+          },
+          {
+            "bytes": 4246,
+            "evidence": {
+              "bytes": 4246,
+              "file": "evidence/e646406048bd592d66f5a4deeadb41ab5071ee051a530a7346f7ed2eb520e8e1.txt",
+              "sha256": "e646406048bd592d66f5a4deeadb41ab5071ee051a530a7346f7ed2eb520e8e1"
+            },
+            "installedBytesMatch": true,
+            "member": "package/node_modules/napi-wasm/README.md",
+            "sha256": "e646406048bd592d66f5a4deeadb41ab5071ee051a530a7346f7ed2eb520e8e1"
+          },
+          {
+            "bytes": 42375,
+            "evidence": {
+              "bytes": 42375,
+              "file": "evidence/0108dc67b01e6f4e8493720a51f58747f5318ff13294bb4636fce108515e0101.txt",
+              "sha256": "0108dc67b01e6f4e8493720a51f58747f5318ff13294bb4636fce108515e0101"
+            },
+            "installedBytesMatch": true,
+            "member": "package/node_modules/napi-wasm/index.mjs",
+            "sha256": "0108dc67b01e6f4e8493720a51f58747f5318ff13294bb4636fce108515e0101"
+          }
+        ],
+        "parent": {
+          "parentName": "lightningcss-wasm",
+          "parentSri": "sha512-SteAkCtRuSCDYPGHKhLV/dDs5Bk+7I4QUxWxfk4xwsTI1rQk8MQyYtpGcd3NECsUGzK0q2/KqoVS+YHCqKHUTQ==",
+          "parentTarballSha256": "ea1419e577dd943907c7e17a99fa7a76143d99c6279a6131e79fb4b1b098ac89",
+          "parentVersion": "1.32.0"
+        },
+        "pathInParent": "node_modules/napi-wasm",
+        "type": "npm-bundled"
+      },
+      "association": "published source commit root tree has no original LICENSE text; README/SPDX is not a full notice; no generic template substituted",
+      "dev": true,
+      "ecosystem": "npm",
+      "evidence": [
+        {
+          "bytes": 810,
+          "commit": "bbde4dc54b23d56889e4ca8a23704424df7ae05e",
+          "file": "evidence/979a10d090dc49549d31ee206b60863950712145a3bebf9fe21a0919e8ca77a1.json",
+          "finalURL": "https://raw.githubusercontent.com/devongovett/napi-wasm/bbde4dc54b23d56889e4ca8a23704424df7ae05e/package.json",
+          "httpStatus": 200,
+          "kind": "metadata",
+          "path": "package.json",
+          "repository": "devongovett/napi-wasm",
+          "sha256": "979a10d090dc49549d31ee206b60863950712145a3bebf9fe21a0919e8ca77a1",
+          "status": "fetched",
+          "url": "https://raw.githubusercontent.com/devongovett/napi-wasm/bbde4dc54b23d56889e4ca8a23704424df7ae05e/package.json"
+        },
+        {
+          "bytes": 1076,
+          "commit": "bbde4dc54b23d56889e4ca8a23704424df7ae05e",
+          "file": "evidence/ae0d5de60da7eeafdef063edf936b52b1cbd4617ec237ff7f42e0e334d0a2134.json",
+          "finalURL": "https://api.github.com/repos/devongovett/napi-wasm/git/trees/bbde4dc54b23d56889e4ca8a23704424df7ae05e",
+          "httpStatus": 200,
+          "kind": "root-tree",
+          "repository": "devongovett/napi-wasm",
+          "sha256": "ae0d5de60da7eeafdef063edf936b52b1cbd4617ec237ff7f42e0e334d0a2134",
+          "status": "fetched",
+          "url": "https://api.github.com/repos/devongovett/napi-wasm/git/trees/bbde4dc54b23d56889e4ca8a23704424df7ae05e"
+        }
+      ],
+      "licenses": [],
+      "lockPath": "node_modules/lightningcss/node_modules/napi-wasm",
+      "name": "napi-wasm",
+      "officialMetadata": {
+        "bytes": 1543,
+        "file": "evidence/894798cca5123d3036d0fa5b71457f4a2b66a0e3849adabf97e343859700ae6e.json",
+        "finalURL": "https://registry.npmjs.org/napi-wasm/1.1.3",
+        "httpStatus": 200,
+        "kind": "version-metadata",
+        "sha256": "894798cca5123d3036d0fa5b71457f4a2b66a0e3849adabf97e343859700ae6e",
+        "status": "fetched",
+        "url": "https://registry.npmjs.org/napi-wasm/1.1.3"
+      },
+      "sourceFiles": [
+        {
+          "bytes": 4246,
+          "file": "evidence/e646406048bd592d66f5a4deeadb41ab5071ee051a530a7346f7ed2eb520e8e1.txt",
+          "path": "README.md",
+          "sha256": "e646406048bd592d66f5a4deeadb41ab5071ee051a530a7346f7ed2eb520e8e1"
+        },
+        {
+          "bytes": 810,
+          "file": "evidence/979a10d090dc49549d31ee206b60863950712145a3bebf9fe21a0919e8ca77a1.json",
+          "path": "package.json",
+          "sha256": "979a10d090dc49549d31ee206b60863950712145a3bebf9fe21a0919e8ca77a1"
+        },
+        {
+          "bytes": 42375,
+          "file": "evidence/0108dc67b01e6f4e8493720a51f58747f5318ff13294bb4636fce108515e0101.txt",
+          "path": "index.mjs",
+          "sha256": "0108dc67b01e6f4e8493720a51f58747f5318ff13294bb4636fce108515e0101"
+        }
+      ],
+      "status": "unresolved",
+      "unresolvedReason": "published source commit root tree has no original LICENSE text; README/SPDX is not a full notice; no generic template substituted",
+      "upstream": {
+        "commit": "bbde4dc54b23d56889e4ca8a23704424df7ae05e",
+        "repository": "devongovett/napi-wasm"
+      },
+      "version": "1.1.3"
+    }
+  ],
+  "schema": 1,
+  "scope": {
+    "apkBaseline": {
+      "changedByThisSupplement": false,
+      "noticeIndexSha256": "e16d99a7b01a62f7ad7d4e11290ab42644ee15bff628ec39e0129af1d10969f8",
+      "sha256": "28b2a6127be19aba8315d6b377428a3a1166f9ad4d4b28acb79fc5b45411d6e0",
+      "sourceRevision": "2cebadbc019c5c0c6a547983cbcbd9da7151f30d",
+      "uniqueTexts": 327
+    },
+    "binaryArchivesIncluded": false,
+    "completeCorrespondingSourceDelivered": false,
+    "delivery": "Separate source/notice supplement; not integrated into APK assembly.",
+    "legalComplianceVerified": false,
+    "resolvedMeaning": "Original notice text obtained and linked to the recorded package source; not a legal-compliance or complete-source certification.",
+    "selection": "Previously missing per-package texts in the daemon normal/build workspace-feature-unified Cargo graph and installed npm lock entries, including dev dependencies; not proof of shipped dependency membership."
+  },
+  "workspaceSharedNotice": {
+    "independentPerPackageTexts": false,
+    "packages": [
+      "atomcode-auth",
+      "atomcode-capabilities",
+      "atomcode-coding",
+      "atomcode-codingplan",
+      "atomcode-config",
+      "atomcode-daemon",
+      "atomcode-harness",
+      "atomcode-i18n",
+      "atomcode-kernel",
+      "atomcode-plexus",
+      "atomcode-review",
+      "atomcode-schedule",
+      "atomcode-telemetry"
+    ],
+    "repositoryPath": "LICENSE",
+    "sha256": "ed8e99eaee0e2c00b0a8802c7235ec792181f54e9d7b157feeafa631b4e93dd8",
+    "version": "5.2.6"
+  }
+}
