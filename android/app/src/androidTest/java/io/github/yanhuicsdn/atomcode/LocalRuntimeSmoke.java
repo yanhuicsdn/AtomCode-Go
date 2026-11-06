@@ -37,6 +37,9 @@ public class LocalRuntimeSmoke extends Instrumentation {
     private boolean keyboardRotation;
     private boolean securityLease;
     private String leaseId;
+    private boolean realSpace;
+    private String realSpaceConfirmation;
+    private String realSpaceCase;
 
     @Override public void onCreate(Bundle arguments) {
         super.onCreate(arguments);
@@ -46,9 +49,13 @@ public class LocalRuntimeSmoke extends Instrumentation {
         keyboardRotation = arguments != null && "true".equals(arguments.getString("keyboard_rotation"));
         securityLease = arguments != null && "true".equals(arguments.getString("security_lease"));
         leaseId = arguments == null ? null : arguments.getString("lease_id");
+        realSpace = arguments != null && "true".equals(arguments.getString("real_space"));
+        realSpaceConfirmation = arguments == null ? null : arguments.getString("real_space_confirmation");
+        realSpaceCase = arguments == null ? null : arguments.getString("real_space_case");
         start();
     }
     @Override public void onStart() {
+        if (realSpace) { new RealSpaceAcceptance(this, realSpaceConfirmation, realSpaceCase).run(); return; }
         if (securityLease) { new SecurityLeaseAcceptance(this, leaseId).run(); return; }
         if (layout) { new MobileLayoutAcceptance(this, keyboardRotation).run(); return; }
         if (storage) { new RuntimeStorageAcceptance(this).run(); return; }
