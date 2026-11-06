@@ -201,8 +201,8 @@ public class LocalRuntimeSmoke extends Instrumentation {
             // Never print connection URLs, cookie values or tokens in evidence.
             StringBuilder causes = new StringBuilder();
             for (Throwable cause = failure.getCause(); cause != null; cause = cause.getCause())
-                causes.append(cause.getClass().getSimpleName()).append(": ").append(cause.getMessage()).append('\n');
-            result.putString("stream", evidence + "FAIL: " + failure.getClass().getSimpleName() + ": " + failure.getMessage() + "\n" + causes
+                causes.append(cause.getClass().getSimpleName()).append('\n');
+            result.putString("stream", evidence + "FAIL: " + failure.getClass().getSimpleName() + (failure instanceof VerificationFailure ? ": " + failure.getMessage() : "") + "\n" + causes
                     + "\nGateway: " + (controller == null ? "not started" : controller.gatewayFailure())
                     + "\nRuntime: " + (controller == null ? "not started" : controller.phase + ": " + controller.message) + "\n");
             finish(Activity.RESULT_CANCELED, result);
@@ -270,6 +270,9 @@ public class LocalRuntimeSmoke extends Instrumentation {
         }
         return null;
     }
-    protected static void require(boolean condition, String reason) throws IOException { if (!condition) throw new IOException(reason); }
+    private static final class VerificationFailure extends IOException {
+        VerificationFailure(String reason) { super(reason); }
+    }
+    protected static void require(boolean condition, String reason) throws IOException { if (!condition) throw new VerificationFailure(reason); }
     protected void pass(String value) { evidence.append("PASS: ").append(value).append('\n'); }
 }
