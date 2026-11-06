@@ -43,6 +43,7 @@ public final class RuntimeController {
     private volatile Path run;
     private volatile String token;
     private volatile boolean userStopped;
+    private Object serviceOwner;
     public volatile Phase phase = Phase.STOPPED;
     public volatile String message = "运行环境尚未启动";
     public volatile int progress;
@@ -56,6 +57,15 @@ public final class RuntimeController {
     public String entryUrl() { String base = origin(); return base == null || token == null ? null : base + "/?token=" + token; }
     public boolean busy() { return phase == Phase.INSTALLING || phase == Phase.STARTING || phase == Phase.STOPPING || phase == Phase.TRANSFERRING; }
     public boolean shouldAutoStart() { return phase == Phase.STOPPED && !userStopped; }
+
+    public synchronized void attachService(Object owner) { serviceOwner = owner; }
+    public synchronized void detachService(Object owner) {
+        // A retired Service can be destroyed after its replacement starts.
+        // Only the current instance may stop the runtime it owns.
+        if (serviceOwner != owner) return;
+        serviceOwner = null;
+        if (phase == Phase.RUNNING || phase == Phase.STARTING || phase == Phase.INSTALLING) stop();
+    }
 
     public interface Transfer { String run(Path workspace) throws Exception; }
     public synchronized void transfer(Transfer operation) {

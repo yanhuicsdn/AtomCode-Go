@@ -36,6 +36,7 @@ public final class RuntimeService extends Service implements RuntimeController.L
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
+        controller.attachService(this);
         startForeground(1, notification());
         if (intent != null && STOP.equals(intent.getAction())) controller.stop();
         else {
@@ -70,8 +71,7 @@ public final class RuntimeService extends Service implements RuntimeController.L
         controller.removeListener(this);
         connectivity.unregisterNetworkCallback(network);
         if (wake.isHeld()) wake.release();
-        if (controller.phase == RuntimeController.Phase.RUNNING || controller.phase == RuntimeController.Phase.STARTING
-                || controller.phase == RuntimeController.Phase.INSTALLING) controller.stop();
+        controller.detachService(this);
         super.onDestroy();
     }
     @Override public IBinder onBind(Intent intent) { return null; }
