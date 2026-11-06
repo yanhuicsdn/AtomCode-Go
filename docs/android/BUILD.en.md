@@ -23,6 +23,8 @@ The script builds WebUI, the ARM64 Linux daemon, the runtime payload and APK in 
 
 Outputs in `dist/android/` include the debug APK, device test APK, SHA256SUMS, dependency inputs and the runtime build report. Generated payloads, local toolchains, signing keys and credentials are excluded from Git.
 
+Before downloads or compilation, the driver runs `python3 android/runtime/verify_frontend_lock.py`. The frontend lock now has 178 pinned registry artifacts and one bundled child protected by its parent. The 138 added URL/SHA-512 pairs preserve all versions and dependency relationships; existing mirror URLs retain officially matching hashes. Missing/invalid pins fail closed. Partial source archives and the separate original-notice supplement are documented in [source materials](SOURCES.en.md).
+
 When unset, `SOURCE_DATE_EPOCH` defaults to the current Git commit's timestamp. An explicit override is accepted only as decimal digits within the unsigned 64-bit range; empty, negative, malformed or overflowing values stop the build. The daemon build watches both this environment variable and `webui/dist`, including added assets or a newly created directory, so an incremental build refreshes its embedded WebUI when these inputs change.
 
 The daemon artifact is selected from Cargo metadata's actual `target_directory`, respecting `CARGO_TARGET_DIR` and Cargo configuration. The path is `<target_directory>/aarch64-unknown-linux-musl/release/atomcode-daemon`. Standalone `python android/runtime/build.py` uses the same lookup by default; `--daemon /absolute/path/to/atomcode-daemon` overrides it.
@@ -117,6 +119,23 @@ adb -s DEVICE shell am instrument -w -e storage true \
 ```
 
 This uses bundled runtime assets in a new cache directory and removes that directory afterward. It tests callback cancellation and injected zero usable space, not an abrupt process kill or physical disk exhaustion.
+
+### Real low-space preflight (owned emulator only)
+
+`run_real_space.py` is separate from the injected-space suite. Use only the already running `AtomCode_API36_16K_Arm64` AVD with default userdata, after verifying its `.ini` path and active qemu backing files are on the checked host filesystem. Keep the installed app matching `--apk`; build and install the updated device-test APK from `c5700c128` or later. The coordinator rejects phone serials and old test APKs without the real-space entry before ADB, then verifies the exact owned AVD, 16 KB pages and installed artifact hashes. Use a new/empty output directory:
+
+```bash
+adb -s emulator-5562 install -r -t android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+python3 android/tests/run_real_space.py --serial emulator-5562 \
+  --adb "$ANDROID_HOME/platform-tools/adb" \
+  --apk dist/android/atomcode-go-arm64-debug.apk \
+  --tests-apk android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+  --output /tmp/atomcode-real-space-new --confirm-fill-owned-emulator
+```
+
+The fixture is a unique child of app **files**, using an ordinary `File` and real `getUsableSpace()`, not a cache fixture or overridden space value. Limits remain at most a 16 GiB data filesystem, 6 GiB filler, 120 seconds filling, at least 256 MiB guest reserve, and at least 8 GiB initial host headroom. Device/host test deadlines are 240/360 seconds. Sequential writes are synced and allocated blocks are checked; failure/timeout cleanup stops the test before removing only its exact fixture, and is not counted as a pass. Do not automatically retry a failed/timed-out fill. No production APK install, real-home access, phone/UI/model test or settings change is performed.
+
+The current `28b2a612...` app with new `9e1ddc61...` tests passed 5/5: 4,196,466,128 bytes written, 4,196,474,880 allocated, and actual available space 318,488,576 below required 335,266,352 bytes. The space error occurred before any extraction callback; old fixture data stayed intact, then installation succeeded after filler release. Guest fixture cleanup restored available space within 57,344 bytes of the initial reading, consistent with normal system activity; the retained host qcow2 grew, so host free space was not fully reclaimed. See [verification](VERIFICATION.en.md#real-low-space-preflight) for evidence and scope. This does not establish physical NAND exhaustion, mid-install ENOSPC or real-user-home recovery.
 
 The local source inventory (`python android/runtime/source_inventory.py`) merges Ubuntu Base status with verified overlaid Debian control metadata. The current payload contains 117 Ubuntu binaries from 82 source/version pairs and three Termux natives. `source-inventory.json` records those source acquisition pages and replaces stale Base package versions; it is not the complete corresponding-source distribution.
 

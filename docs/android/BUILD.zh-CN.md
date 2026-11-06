@@ -23,6 +23,8 @@ bash android/build-local.sh
 
 输出位于 `dist/android/`：调试 APK、设备测试 APK、SHA256SUMS、运行环境构建报告和依赖清单。`dist/`、本地工具链和大型运行环境均不提交到 Git。
 
+下载或编译前，driver 先运行 `python3 android/runtime/verify_frontend_lock.py`。前端锁现有 178 个固定 registry 归档及 1 个由父归档保护的 bundled 子包；新增 138 组 URL/SHA-512 不改变版本或依赖关系，已有镜像 URL 的摘要与官方一致。缺失或无效摘要会直接终止。部分源码归档和独立许可原文补充资料见[源码材料](SOURCES.zh-CN.md)。
+
 未设置 `SOURCE_DATE_EPOCH` 时，默认使用当前 Git 提交的时间戳。显式覆盖值必须仅含十进制数字且在无符号 64 位整数范围内；空值、负数、格式错误或溢出会终止构建。daemon 的构建脚本同时监听这个环境变量和 `webui/dist`，包括新增资产或首次出现的目录，使这些输入变化后增量构建会更新内嵌 WebUI。
 
 daemon 产物取自 Cargo metadata 返回的实际 `target_directory`，遵循 `CARGO_TARGET_DIR` 与 Cargo 配置，路径为 `<target_directory>/aarch64-unknown-linux-musl/release/atomcode-daemon`。独立执行 `python android/runtime/build.py` 时也默认使用同样的查找方式；可用 `--daemon /absolute/path/to/atomcode-daemon` 显式覆盖。
@@ -105,6 +107,23 @@ adb -s DEVICE shell am instrument -w -e storage true \
 ```
 
 测试在新建缓存目录中使用真实内置运行环境，结束后删除该目录。覆盖回调取消和注入零可用空间，不能将结果当作强制杀进程或实际磁盘写满的验收证据。
+
+### 真实低空间预检（仅我方模拟器）
+
+`run_real_space.py` 独立于注入空间测试。只允许已启动的 `AtomCode_API36_16K_Arm64` AVD 使用默认 userdata，先核对 `.ini` 路径、活动 qemu 的 backing 文件和所检查的宿主文件系统一致。保持已安装 App 与 `--apk` 匹配，另行构建、安装 `c5700c128` 或更新版本的设备测试 APK。协调器在 ADB 前拒绝手机序列号和缺少真实空间入口的旧测试 APK，随后核对精确白名单 AVD、16 KB 页和已安装产物摘要。输出目录须新建或为空：
+
+```bash
+adb -s emulator-5562 install -r -t android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+python3 android/tests/run_real_space.py --serial emulator-5562 \
+  --adb "$ANDROID_HOME/platform-tools/adb" \
+  --apk dist/android/atomcode-go-arm64-debug.apk \
+  --tests-apk android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+  --output /tmp/atomcode-real-space-new --confirm-fill-owned-emulator
+```
+
+fixture 是应用 **files** 下的唯一独立目录，使用普通 `File` 的真实 `getUsableSpace()`，不是缓存 fixture，也不覆写可用空间。限制保持为数据文件系统不超过 16 GiB、填充不超过 6 GiB/120 秒、客体至少保留 256 MiB、初始宿主余量至少 8 GiB；设备/宿主测试时限为 240/360 秒。顺序写入后同步并核对实际分配块；失败或超时先停止测试再只清理本次精确目录，不能计作通过，也不能自动重填。不安装生产 APK，不访问真实 home，不执行手机/UI/模型测试或改变设置。
+
+当前 `28b2a612...` App 与新 `9e1ddc61...` 测试包通过 5/5：写入 4,196,466,128 bytes、实际分配 4,196,474,880 bytes，可用空间 318,488,576 小于所需 335,266,352 bytes。空间错误发生于提取回调之前，旧 fixture 数据保留，释放填充后重装成功。清理 fixture 后客体可用空间与初值仅差 57,344 bytes，处于正常系统写入量级；保留的宿主 qcow2 有增长，不能声称宿主空间全部回收。证据和边界见[验收记录](VERIFICATION.zh-CN.md#真实低空间预检)。这不代表物理 NAND 耗尽、安装中途 ENOSPC 或真实用户 home 恢复通过。
 
 本地源码清单（`python android/runtime/source_inventory.py`）合并 Ubuntu Base 的包状态和经校验的额外 Debian 包控制元数据。当前内置环境有 117 个 Ubuntu 二进制包、82 组源码包/版本及 3 个 Termux 原生组件；`source-inventory.json` 记录对应源码获取页面并反映被覆盖的旧版本，但不等于完整对应源码交付。
 
