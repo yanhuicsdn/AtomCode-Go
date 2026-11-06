@@ -17,6 +17,7 @@ import io.github.yanhuicsdn.atomcode.runtime.RuntimeController;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -29,6 +30,10 @@ final class MobileLayoutAcceptance {
     private final LocalRuntimeSmoke host;
     private final boolean keyboardRotation;
     private final Map<Activity, Boolean> previousKeepScreenOn = new LinkedHashMap<>();
+    // Written/read on the main thread. This lifecycle evidence is independent
+    // of ActivityMonitor, whose recreation notification can be absent.
+    private final Map<Activity, Long> creationSequences = new IdentityHashMap<>();
+    private long createdSequence;
     private volatile Activity current;
     private volatile Activity resumed;
     private String origin;
@@ -55,6 +60,7 @@ final class MobileLayoutAcceptance {
         Application.ActivityLifecycleCallbacks callbacks = new Application.ActivityLifecycleCallbacks() {
             @Override public void onActivityCreated(Activity activity, Bundle saved) {
                 if (!(activity instanceof MainActivity)) return;
+                creationSequences.put(activity, ++createdSequence);
                 current = activity;
                 boolean alreadyKeptOn = (activity.getWindow().getAttributes().flags
                         & WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) != 0;
@@ -180,38 +186,59 @@ final class MobileLayoutAcceptance {
     private void rotate(int request, int expectedConfiguration) throws Exception {
         String previousStage = stage;
         stage = previousStage + "/monitor";
-        observation = "replacement=false";
-        Activity before = current;
+        observation = "monitorReplacement=false, lifecycleReplacement=false";
+        final Activity[] beforeSnapshot = new Activity[1];
+        final long[] sequenceSnapshot = new long[1];
+        host.runOnMainSync(() -> {
+            beforeSnapshot[0] = current;
+            sequenceSnapshot[0] = createdSequence;
+        });
+        Activity before = beforeSnapshot[0];
+        long sequenceBeforeRequest = sequenceSnapshot[0];
         Instrumentation.ActivityMonitor monitor = host.addMonitor(MainActivity.class.getName(), null, false);
         try {
             host.runOnMainSync(() -> before.setRequestedOrientation(request));
             Activity replacement = null;
             Activity stableCandidate = null;
             int stableWidth = 0, stableHeight = 0;
-            boolean observedReplacement = false, observedPendingConfiguration = false;
+            boolean monitorObservedReplacement = false, observedPendingConfiguration = false;
             long deadline = SystemClock.elapsedRealtime() + 20000;
             while (SystemClock.elapsedRealtime() < deadline) {
                 Activity candidate = host.waitForMonitorWithTimeout(monitor, 200);
-                if (candidate != null && candidate != before) observedReplacement = true;
-                Activity latest = current;
+                if (candidate != null && candidate != before) monitorObservedReplacement = true;
+                final Activity[] latestSnapshot = new Activity[1];
+                final long[] latestSequence = new long[1];
                 final int[] geometry = new int[3];
                 final boolean[] usable = new boolean[1];
-                if (latest != null && latest != before) host.runOnMainSync(() -> {
+                final boolean[] latestResumed = new boolean[1];
+                host.runOnMainSync(() -> {
+                    Activity latest = current;
+                    latestSnapshot[0] = latest;
+                    Long sequence = creationSequences.get(latest);
+                    latestSequence[0] = sequence == null ? 0 : sequence;
+                    latestResumed[0] = latest != null && resumed == latest;
+                    if (latest == null || latest == before || latestSequence[0] <= sequenceBeforeRequest) return;
                     View decor = latest.getWindow().getDecorView();
                     geometry[0] = latest.getResources().getConfiguration().orientation;
                     geometry[1] = decor.getWidth();
                     geometry[2] = decor.getHeight();
-                    usable[0] = !latest.isDestroyed() && resumed == latest && decor.isAttachedToWindow()
+                    usable[0] = !latest.isDestroyed() && latestResumed[0] && decor.isAttachedToWindow()
                             && geometry[0] == expectedConfiguration && geometry[1] > 0 && geometry[2] > 0;
                 });
-                if (latest != null && latest != before && geometry[0] != expectedConfiguration)
+                Activity latest = latestSnapshot[0];
+                boolean lifecycleReplacement = latest != null && latest != before
+                        && latestSequence[0] > sequenceBeforeRequest;
+                if (lifecycleReplacement && geometry[0] != expectedConfiguration)
                     observedPendingConfiguration = true;
-                observation = "replacement=" + observedReplacement + ", resumed=" + (resumed == latest)
+                observation = "monitorReplacement=" + monitorObservedReplacement
+                        + ", lifecycleReplacement=" + lifecycleReplacement
+                        + ", createdAfterRequest=" + (latestSequence[0] > sequenceBeforeRequest)
+                        + ", resumed=" + latestResumed[0]
                         + ", expected=" + expectedConfiguration + ", actual=" + geometry[0]
                         + ", width=" + geometry[1] + ", height=" + geometry[2];
-                if (observedReplacement && usable[0]) {
-                    // ActivityMonitor can observe a new instance before its
-                    // resumed configuration/window geometry has settled.
+                if (lifecycleReplacement && usable[0]) {
+                    // The callback must prove a newly created, resumed instance.
+                    // Monitor delivery alone is neither necessary nor sufficient.
                     if (stableCandidate == latest && stableWidth == geometry[1] && stableHeight == geometry[2]) {
                         replacement = latest;
                         break;
@@ -222,6 +249,8 @@ final class MobileLayoutAcceptance {
             }
             LocalRuntimeSmoke.require(replacement != null, "orientation must recreate and settle MainActivity");
             current = replacement;
+            if (!monitorObservedReplacement)
+                host.evidence.append("OBSERVATION: lifecycle creation/resume and stable requested configuration proved replacement without ActivityMonitor delivery\n");
             if (observedPendingConfiguration)
                 host.evidence.append("OBSERVATION: replacement configuration was pending before it stabilized\n");
             stage = previousStage;
