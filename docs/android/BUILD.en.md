@@ -5,7 +5,7 @@ Compilation, packaging and tests run locally. No GitHub Actions or remote build 
 ## Prerequisites
 
 - Rust 1.95.0 and rustup, with `aarch64-unknown-linux-musl`.
-- Node.js 22.6+ and npm; the committed WebUI lockfile is used by `npm ci`.
+- Node.js 22.12.0+ and npm; the committed WebUI lockfile is used by `npm ci`. The build script checks this minimum before installing dependencies.
 - Python 3.9+. Host tools are pinned in `android/runtime/requirements.txt` and installed into `.tools/python`.
 - JDK 17+, selected through `JAVA_HOME`; Java 8 cannot build this Android project.
 - Android SDK platform 36 and compatible build tools, selected through `ANDROID_HOME` or `ANDROID_SDK_ROOT`.
@@ -77,3 +77,17 @@ Minimum SDK is 26, ARM64 only. Target SDK 28 follows the reference's private-exe
 Foreground service status does not guarantee unlimited background execution. The wake lock currently lasts at most 30 minutes; forced stops and vendor restrictions still apply.
 
 Before public production distribution, complete the corresponding-source/license package, production signing and the remaining device matrix. Source URLs alone do not replace any applicable corresponding-source obligation.
+
+## Additional host checks
+
+The Android workspace requires an installed/enabled Chromium-based System WebView 99 or newer, matching the WebUI build target. Older, missing or broken providers display a native upgrade diagnostic. This does not establish Android 8 execution compatibility. ZIP import needs temporary storage for both the compressed archive and expanded project; each is limited to 2 GB. Incomplete central directories and file size/CRC mismatches are rejected.
+
+On an unlocked emulator, run isolated storage checks with:
+
+```bash
+adb -s DEVICE shell am force-stop io.github.yanhuicsdn.atomcode
+adb -s DEVICE shell am instrument -w -e storage true \
+  io.github.yanhuicsdn.atomcode.test/io.github.yanhuicsdn.atomcode.LocalRuntimeSmoke
+```
+
+This uses bundled runtime assets in a new cache directory and removes that directory afterward. It tests callback cancellation and injected zero usable space, not an abrupt process kill or physical disk exhaustion.

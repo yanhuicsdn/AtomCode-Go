@@ -7,6 +7,10 @@ ROOT="$PWD"
 for tool in node npm cargo rustc python3 java; do
     command -v "$tool" >/dev/null || { echo "Missing build tool: $tool" >&2; exit 1; }
 done
+if ! node -e 'const [major, minor] = process.versions.node.split(".").map(Number); process.exit(major > 22 || (major === 22 && minor >= 12) ? 0 : 1)'; then
+    echo 'Node.js 22.12.0 or newer is required by the locked Vite/Rolldown build tools.' >&2
+    exit 1
+fi
 if [[ "$(rustc --version)" != rustc\ 1.95.0\ * ]]; then
     echo 'This runtime is pinned to Rust 1.95.0. Select that toolchain before building.' >&2
     exit 1

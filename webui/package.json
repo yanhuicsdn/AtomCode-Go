@@ -20,7 +20,7 @@
     "test:model-cards": "node scripts/model-cards-e2e.mjs"
   },
   "engines": {
-    "node": ">=22.6"
+    "node": ">=22.12.0"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",

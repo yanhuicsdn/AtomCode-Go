@@ -34,7 +34,7 @@ Real-model end-to-end acceptance remains outstanding until a supported model ser
 
 Compilation, packaging and tests run on your own machine. No GitHub Actions or remote build workers are used.
 
-Requirements: Rust 1.95.0, Node.js 22.6+, Python 3.9+, JDK 17+, and an Android SDK containing platform 36 and compatible build tools.
+Requirements: Rust 1.95.0, Node.js 22.12.0+, Python 3.9+, JDK 17+, and an Android SDK containing platform 36 and compatible build tools.
 
 ```bash
 export JAVA_HOME=/absolute/path/to/jdk17/Contents/Home

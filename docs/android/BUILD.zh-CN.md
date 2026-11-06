@@ -5,7 +5,7 @@
 ## 依赖与构建
 
 - Rust 1.95.0、rustup；Linux 目标 `aarch64-unknown-linux-musl`。
-- Node.js 22.6 以上、npm；使用仓库已有 `webui/package-lock.json` 执行 `npm ci`。
+- Node.js 22.12.0 及以上、npm；使用仓库已有 `webui/package-lock.json` 执行 `npm ci`，构建脚本会在安装依赖前检查最低版本。
 - Python 3.9 以上。`android/runtime/requirements.txt` 固定本机交叉编译和 Debian 解压工具版本，安装在项目内 `.tools/python`。
 - JDK 17 以上；通过 `JAVA_HOME` 指定。系统默认 Java 8 不可用于 Android 构建。
 - Android SDK：platform 36、build-tools 36.0.0 或兼容版本。通过 `ANDROID_HOME` 或 `ANDROID_SDK_ROOT` 指定。
@@ -66,3 +66,17 @@ adb -s DEVICE shell am instrument -w \
 - 公开分发前仍需完成第三方对应源码、构建配方与许可交付审核；仅有源代码 URL 不能替代适用许可证要求的完整对应源码。
 
 界面测试期间保持设备解锁，先关闭 Android 首次全屏提示；模拟器连接实体键盘时，测试屏幕键盘缩放前应启用屏幕键盘。
+
+## 补充宿主检查
+
+工作区要求已安装并启用 Chromium 99 或更新版本的 System WebView，与 WebUI 构建目标一致。过旧、缺失或无法初始化的组件显示原生升级提示；这不代表 Android 8 已验收通过。ZIP 导入需要同时存放压缩归档和展开项目的额外临时空间，两者各限 2 GB；缺失中央目录、条目大小或 CRC 不符时拒绝提交。
+
+在解锁的模拟器上运行隔离存储检查：
+
+```bash
+adb -s DEVICE shell am force-stop io.github.yanhuicsdn.atomcode
+adb -s DEVICE shell am instrument -w -e storage true \
+  io.github.yanhuicsdn.atomcode.test/io.github.yanhuicsdn.atomcode.LocalRuntimeSmoke
+```
+
+测试在新建缓存目录中使用真实内置运行环境，结束后删除该目录。覆盖回调取消和注入零可用空间，不能将结果当作强制杀进程或实际磁盘写满的验收证据。

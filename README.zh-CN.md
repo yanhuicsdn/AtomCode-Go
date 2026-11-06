@@ -34,7 +34,7 @@ AtomCode-Go 将 AtomCode 的 Rust 引擎和 WebUI 装进 Android 应用，参考
 
 编译、打包和测试全部在本机执行，不使用 GitHub Actions 或远程构建机器。
 
-依赖：Rust 1.95.0、Node.js 22.6+、Python 3.9+、JDK 17+，以及包含 platform 36 和兼容 build-tools 的 Android SDK。
+依赖：Rust 1.95.0、Node.js 22.12.0+、Python 3.9+、JDK 17+，以及包含 platform 36 和兼容 build-tools 的 Android SDK。
 
 ```bash
 export JAVA_HOME=/absolute/path/to/jdk17/Contents/Home

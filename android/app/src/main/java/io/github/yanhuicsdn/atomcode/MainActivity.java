@@ -45,6 +45,7 @@ public final class MainActivity extends Activity implements RuntimeController.Li
     private Button exportFiles;
     private ProgressBar progress;
     private WebView web;
+    private String webUnavailable;
     private String loadedOrigin;
     private ValueCallback<Uri[]> upload;
     private static final int CHOOSE_FILE = 10;
@@ -109,9 +110,7 @@ public final class MainActivity extends Activity implements RuntimeController.Li
                 + "工作区和会话保存在应用私有目录；卸载应用会删除它们。\n\n"
                 + "这是 ARM64 侧载版本，首次安装时系统可能提示此应用面向较旧的 Android 版本。");
         root.addView(introduction);
-        web = new WebView(this);
-        configureWebView();
-        root.addView(web, new LinearLayout.LayoutParams(-1, 0, 1));
+        createWebView(root);
         setContentView(root);
         changed();
         root.post(() -> {
@@ -127,6 +126,29 @@ public final class MainActivity extends Activity implements RuntimeController.Li
         value.setMinHeight(dp(48));
         parent.addView(value);
         return value;
+    }
+
+    private void createWebView(LinearLayout root) {
+        try {
+            android.content.pm.PackageInfo provider = WebView.getCurrentWebViewPackage();
+            if (provider == null || !WebViewCompatibility.supports(provider.versionName)) {
+                webUnavailable = "请安装或更新 Android System WebView（Chromium 99 或更新版本），然后重新打开 AtomCode-Go。"
+                        + "\nUpdate Android System WebView to Chromium 99 or newer, then reopen AtomCode-Go.";
+                return;
+            }
+            web = new WebView(this);
+            configureWebView();
+            root.addView(web, new LinearLayout.LayoutParams(-1, 0, 1));
+        } catch (RuntimeException | LinkageError unavailable) {
+            // Provider installation/initialization can fail even when package
+            // metadata exists. Keep the native recovery controls usable.
+            if (web != null) {
+                try { web.destroy(); } catch (RuntimeException | LinkageError ignored) {}
+                web = null;
+            }
+            webUnavailable = "Android System WebView 无法启动。请安装并启用兼容版本（Chromium 99 或更新版本），然后重新打开应用。"
+                    + "\nAndroid System WebView could not start. Install/enable a compatible provider (Chromium 99+), then reopen the app.";
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -171,6 +193,7 @@ public final class MainActivity extends Activity implements RuntimeController.Li
 
             @Override public void onReceivedError(WebView view, android.webkit.WebResourceRequest request, android.webkit.WebResourceError error) {
                 if (request.isForMainFrame()) runOnUiThread(() -> {
+                    if (isDestroyed() || web == null) return;
                     // The default Chromium error page echoes its failing URL,
                     // including a bootstrap token. Show only native status.
                     web.setVisibility(View.GONE);
@@ -206,7 +229,8 @@ public final class MainActivity extends Activity implements RuntimeController.Li
     @Override protected void onStart() { super.onStart(); controller.addListener(this); changed(); }
     @Override protected void onStop() { controller.removeListener(this); super.onStop(); }
     @Override public void changed() {
-        status.setText(controller.message + (controller.phase == RuntimeController.Phase.INSTALLING ? " · " + controller.progress + "%" : ""));
+        String message = controller.message + (controller.phase == RuntimeController.Phase.INSTALLING ? " · " + controller.progress + "%" : "");
+        status.setText(webUnavailable == null ? message : message + "\n\n" + webUnavailable);
         progress.setVisibility(controller.busy() ? View.VISIBLE : View.GONE);
         progress.setIndeterminate(controller.phase != RuntimeController.Phase.INSTALLING);
         progress.setProgress(controller.progress);
@@ -218,20 +242,20 @@ public final class MainActivity extends Activity implements RuntimeController.Li
         importFiles.setVisibility(controller.phase == RuntimeController.Phase.RUNNING ? View.GONE : View.VISIBLE);
         exportFiles.setVisibility(controller.phase == RuntimeController.Phase.RUNNING ? View.GONE : View.VISIBLE);
         String origin = controller.origin();
-        boolean running = origin != null;
+        boolean running = origin != null && web != null;
         chrome.setVisibility(running ? View.GONE : View.VISIBLE);
         setRuntimeFullscreen(running);
         introduction.setVisibility(running ? View.GONE : View.VISIBLE);
-        web.setVisibility(running ? View.VISIBLE : View.GONE);
+        if (web != null) web.setVisibility(running ? View.VISIBLE : View.GONE);
         if (running && !origin.equals(loadedOrigin)) {
             loadedOrigin = origin;
             CookieManager.getInstance().removeAllCookies(removed -> {
-                if (!isDestroyed() && origin.equals(controller.origin())) {
+                if (!isDestroyed() && web != null && origin.equals(controller.origin())) {
                     web.clearSslPreferences();
                     web.loadUrl(controller.entryUrl());
                 }
             });
-        } else if (!running && loadedOrigin != null) {
+        } else if (web != null && !running && loadedOrigin != null) {
             loadedOrigin = null;
             web.stopLoading();
             web.loadUrl("about:blank");
@@ -301,13 +325,16 @@ public final class MainActivity extends Activity implements RuntimeController.Li
         if (hasFocus && fullscreen) setRuntimeFullscreen(true);
     }
     @Override public void onBackPressed() {
-        if (web.getVisibility() == View.VISIBLE && web.canGoBack()) web.goBack();
+        if (web != null && web.getVisibility() == View.VISIBLE && web.canGoBack()) web.goBack();
         else super.onBackPressed();
     }
     @Override protected void onDestroy() {
         if (upload != null) upload.onReceiveValue(null);
-        web.stopLoading();
-        web.destroy();
+        if (web != null) {
+            web.stopLoading();
+            web.destroy();
+            web = null;
+        }
         super.onDestroy();
     }
 }

@@ -10,11 +10,13 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.zip.CRC32;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 /** Explicit workspace transfer, always into a new project with no overwrite. */
@@ -29,28 +31,57 @@ public final class WorkspaceArchive {
         String identifier = UUID.randomUUID().toString().replace("-", "");
         Path stage = workspace.getParent().resolve(".import-" + identifier);
         Files.createDirectory(stage);
+        Path compressed = null;
         long expanded = 0;
         Set<String> names = new HashSet<>();
         boolean committed = false;
         try {
-            try (ZipInputStream archive = new ZipInputStream(input)) {
-                ZipEntry entry;
+            compressed = Files.createTempFile(workspace.getParent(), ".import-" + identifier + "-", ".zip");
+            // ZipInputStream accepts a complete prefix of a truncated ZIP.
+            // Require a bounded, complete central directory before importing.
+            try (InputStream source = input; OutputStream output = Files.newOutputStream(compressed)) {
                 byte[] buffer = new byte[65536];
-                while ((entry = archive.getNextEntry()) != null) {
+                long bytes = 0;
+                int read;
+                while ((read = source.read(buffer)) != -1) {
+                    if (read > MAX_BYTES - bytes) throw new IOException("压缩包大小超过 2 GB 上限");
+                    bytes += read;
+                    output.write(buffer, 0, read);
+                }
+            }
+            try (ZipFile archive = new ZipFile(compressed.toFile())) {
+                Enumeration<? extends ZipEntry> entries = archive.entries();
+                byte[] buffer = new byte[65536];
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
                     if (!names.add(entry.getName()) || names.size() > MAX_ENTRIES)
                         throw new IOException("压缩包包含重复路径或文件数过多");
                     Path destination = RuntimeFiles.child(stage, entry.getName());
-                    if (entry.isDirectory()) Files.createDirectories(destination);
-                    else {
+                    if (entry.getSize() < 0 || entry.getCrc() < 0)
+                        throw new IOException("压缩包条目缺少完整性信息");
+                    if (entry.isDirectory()) {
+                        if (entry.getSize() != 0 || entry.getCrc() != 0)
+                            throw new IOException("压缩包目录条目包含无效数据");
+                        Files.createDirectories(destination);
+                    } else {
+                        if (entry.getSize() > MAX_BYTES - expanded) throw new IOException("工作区解压大小超过 2 GB 上限");
                         Files.createDirectories(destination.getParent());
-                        try (OutputStream output = Files.newOutputStream(destination)) {
+                        CRC32 checksum = new CRC32();
+                        long written = 0;
+                        try (InputStream source = archive.getInputStream(entry);
+                             OutputStream output = Files.newOutputStream(destination)) {
                             int read;
-                            while ((read = archive.read(buffer)) != -1) {
+                            while ((read = source.read(buffer)) != -1) {
                                 if (read > MAX_BYTES - expanded) throw new IOException("工作区解压大小超过 2 GB 上限");
                                 expanded += read;
+                                written += read;
+                                checksum.update(buffer, 0, read);
                                 output.write(buffer, 0, read);
                             }
                         }
+                        // ZipFile streams do not check CRC themselves.
+                        if (written != entry.getSize() || checksum.getValue() != entry.getCrc())
+                            throw new IOException("压缩包条目大小或 CRC 校验失败");
                         // Files are never installed as links. Restore only the
                         // owner execute bit from our optional private ZIP extra.
                         if (executable(entry.getExtra())) {
@@ -59,17 +90,22 @@ public final class WorkspaceArchive {
                             Files.setPosixFilePermissions(destination, mode);
                         }
                     }
-                    archive.closeEntry();
                 }
             }
             if (names.isEmpty()) throw new IOException("压缩包为空或不是可读取的 ZIP 文件");
+            Files.delete(compressed);
+            compressed = null;
             Path project = workspace.resolve("imported-" + identifier);
             if (Files.exists(project, LinkOption.NOFOLLOW_LINKS)) throw new IOException("导入目标已经存在，未覆盖文件");
             RuntimeFiles.atomicMove(stage, project);
             committed = true;
             return project;
         } finally {
-            if (!committed) RuntimeFiles.deleteTree(stage);
+            try {
+                if (!committed) RuntimeFiles.deleteTree(stage);
+            } finally {
+                if (compressed != null) Files.deleteIfExists(compressed);
+            }
         }
     }
 
