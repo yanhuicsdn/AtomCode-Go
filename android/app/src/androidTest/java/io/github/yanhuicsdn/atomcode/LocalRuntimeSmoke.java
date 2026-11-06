@@ -33,14 +33,17 @@ public class LocalRuntimeSmoke extends Instrumentation {
     protected final StringBuilder evidence = new StringBuilder();
     private boolean realModel;
     private boolean storage;
+    private boolean layout;
 
     @Override public void onCreate(Bundle arguments) {
         super.onCreate(arguments);
         realModel = arguments != null && "true".equals(arguments.getString("real_model"));
         storage = arguments != null && "true".equals(arguments.getString("storage"));
+        layout = arguments != null && "true".equals(arguments.getString("layout"));
         start();
     }
     @Override public void onStart() {
+        if (layout) { new MobileLayoutAcceptance(this).run(); return; }
         if (storage) { new RuntimeStorageAcceptance(this).run(); return; }
         if (realModel) { new RealModelAcceptance(this).run(); return; }
         Bundle result = new Bundle();
