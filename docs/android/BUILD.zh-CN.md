@@ -31,6 +31,20 @@ bash android/build-local.sh
 
 PRoot 原生组件由 Android 安装器解压到 `nativeLibraryDir`。Linux rootfs 安装到私有的不可变 generation，激活通过原子指针提交；`files/home/` 下的会话、模型设置和工作区不在被替换的 rootfs 内。
 
+启动时除 daemon 外，还根据经过完整 SHA-256 校验的内置 ZIP 验证以下五个固定用户空间文件，以及所需 Linux 别名链接和执行权限：
+
+```text
+/usr/bin/env
+/usr/bin/bash
+/usr/lib/aarch64-linux-gnu/ld-linux-aarch64.so.1
+/usr/lib/aarch64-linux-gnu/libc.so.6
+/usr/lib/aarch64-linux-gnu/libtinfo.so.6.4
+```
+
+检查范围是启动/终端的关键依赖，不是全部 Linux 文件。预期摘要按资产 SHA-256 缓存；DNS 刷新不会展开 ZIP 或遍历代际目录。
+
+只有指针成功提交且保留记录与当前代际匹配后才回收历史环境，保留当前代际，以及安装前指针指向且具有有效完成标志的上一代际（如存在）；不清理未知条目或顶层符号链接。待删除的已完成代际先原子移动到宿主保留槽 `files/runtime/.gc-staging`，再删除内容。即使中断时槽内 `.ready` 已被删除，后续有效启动仍可继续清理。清理失败不撤回已提交环境，会在以后重试；`files/home/` 不属于回收范围。
+
 ## 安装与设备 smoke test
 
 ```bash
@@ -83,4 +97,27 @@ adb -s DEVICE shell am instrument -w -e storage true \
 
 本地源码清单（`python android/runtime/source_inventory.py`）合并 Ubuntu Base 的包状态和经校验的额外 Debian 包控制元数据。当前内置环境有 117 个 Ubuntu 二进制包、82 组源码包/版本及 3 个 Termux 原生组件；`source-inventory.json` 记录对应源码获取页面并反映被覆盖的旧版本，但不等于完整对应源码交付。
 
-局部横竖屏/长文本检查：解锁设备后使用同一 instrumentation 命令加 `-e layout true`，不会发送模型请求。测试会恢复自身设置的方向和亮屏标志，并清理自己的 canary 文件。
+### 横竖屏与屏幕键盘
+
+设备须保持解锁，先关闭首次全屏提示，并启用停靠式屏幕输入法。模拟器连接实体键盘时，应先打开屏幕键盘偏好，测试后恢复该全局设置；helper 不修改这项偏好。执行：
+
+```bash
+adb -s DEVICE shell am force-stop io.github.yanhuicsdn.atomcode
+adb -s DEVICE shell am instrument -w -e layout true -e keyboard_rotation true \
+  io.github.yanhuicsdn.atomcode.test/io.github.yanhuicsdn.atomcode.LocalRuntimeSmoke
+```
+
+只测横竖屏/长文本时，去掉 `-e keyboard_rotation true`，保留 `-e layout true`。键盘模式检查竖屏和横屏下 IME 确实可见，且 WebView/输入框未被其遮挡；若 Android 在 Activity 重建时隐藏输入法，测试会再次触摸输入框后检查新方向。不发送模型请求。helper 会恢复自身设置的方向和亮屏标志、删除自己的 canary；这只是局部布局覆盖，不代表完整手机验收。
+
+### 独立 UID 安全探针
+
+先按上文安装匹配的宿主 App 和设备测试 APK，再在本地构建、安装独立测试探针：
+
+```bash
+android/gradlew -p android :probe:assembleDebug --console=plain
+adb -s DEVICE install -r -t android/probe/build/outputs/apk/debug/probe-debug.apk
+python3 android/tests/run_security_probe.py --serial DEVICE \
+  --adb "$ANDROID_HOME/platform-tools/adb" --output dist/android/evidence/security-DEVICE
+```
+
+`:probe` 不打入 `:app`，没有 shared UID 或启动图标，release variant 已禁用；其 manifest 为 test-only，因此安装须加 `-t`。请在没有用户/模型操作运行时执行协调脚本：它会停止并重启宿主运行环境，但不清空应用数据。脚本只传递公开端点/证书元数据，不传 token 或 Cookie，要求通过 7 项独立 UID 检查和 2 项宿主健康检查，结果保存到 `--output` 目录。范围覆盖活跃私有 socket、未认证 TLS 请求、Origin/Host 过滤、已占端口独占和平台证书信任；不能据此声称全部启动前端口抢占、上传或备份行为已验收。
