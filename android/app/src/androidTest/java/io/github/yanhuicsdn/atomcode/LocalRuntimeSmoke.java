@@ -147,13 +147,25 @@ public class LocalRuntimeSmoke extends Instrumentation {
                 browser.evaluateJavascript("document.querySelector('.model-config-modal .modal-close')?.click()", null);
             });
             SystemClock.sleep(200);
+            // Exercise an actual touch: JavaScript focus alone is not a user
+            // gesture and WebView may correctly decline to show the IME.
+            AtomicReference<String> inputBounds = new AtomicReference<>();
+            CountDownLatch boundsRead = new CountDownLatch(1);
             runOnMainSync(() -> {
                 WebView browser = findWebView(activity.getWindow().getDecorView());
-                browser.requestFocus();
-                browser.evaluateJavascript("document.querySelector('textarea')?.focus()", null);
-                getTargetContext().getSystemService(android.view.inputmethod.InputMethodManager.class)
-                        .showSoftInput(browser, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+                browser.evaluateJavascript("(()=>{const e=document.querySelector('textarea');if(!e)return null;e.scrollIntoView({block:'center'});const r=e.getBoundingClientRect();return [((r.left+r.right)/2)*devicePixelRatio,((r.top+r.bottom)/2)*devicePixelRatio]})()",
+                        value -> { inputBounds.set(value); boundsRead.countDown(); });
+                browser.getLocationOnScreen(location);
             });
+            require(boundsRead.await(5, TimeUnit.SECONDS), "composer bounds inspection timed out");
+            org.json.JSONArray bounds = new org.json.JSONArray(inputBounds.get());
+            float touchX = location[0] + (float)bounds.getDouble(0);
+            float touchY = location[1] + (float)bounds.getDouble(1);
+            long touchTime = SystemClock.uptimeMillis();
+            android.view.MotionEvent down = android.view.MotionEvent.obtain(touchTime, touchTime, android.view.MotionEvent.ACTION_DOWN, touchX, touchY, 0);
+            android.view.MotionEvent up = android.view.MotionEvent.obtain(touchTime, touchTime + 80, android.view.MotionEvent.ACTION_UP, touchX, touchY, 0);
+            try { sendPointerSync(down); sendPointerSync(up); }
+            finally { down.recycle(); up.recycle(); }
             boolean resizedForKeyboard = false;
             for (int attempt = 0; attempt < 50; attempt++) {
                 SystemClock.sleep(100);
