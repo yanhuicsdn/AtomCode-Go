@@ -94,14 +94,19 @@ public final class LocalGateway implements Closeable {
 
     public int port() { return server.getLocalPort(); }
 
+    private boolean submit(Runnable task) {
+        try { workers.execute(task); return true; }
+        catch (java.util.concurrent.RejectedExecutionException stopped) { return false; }
+    }
+
     public void start() {
-        workers.execute(() -> {
+        submit(() -> {
             while (!closed) {
                 try {
                     SSLSocket socket = (SSLSocket)server.accept();
                     if (!capacity.tryAcquire()) { socket.close(); continue; }
                     connections.add(socket);
-                    workers.execute(() -> {
+                    if (!submit(() -> {
                         try { forward(socket); }
                         catch (IOException error) {
                             // Only protocol/socket failures, never request headers,
@@ -113,7 +118,12 @@ public final class LocalGateway implements Closeable {
                             try { socket.close(); } catch (IOException ignored) {}
                             capacity.release();
                         }
-                    });
+                    })) {
+                        connections.remove(socket);
+                        capacity.release();
+                        socket.close();
+                        return;
+                    }
                 } catch (IOException stopped) { if (closed) return; }
             }
         });
@@ -163,10 +173,10 @@ public final class LocalGateway implements Closeable {
             toGuest.write(forwarded.toString().getBytes(StandardCharsets.ISO_8859_1));
             toGuest.flush();
             browser.setSoTimeout(0);
-            workers.execute(() -> {
+            if (!submit(() -> {
                 try { copy(incoming, toGuest); guest.shutdownOutput(); }
                 catch (IOException ignored) {}
-            });
+            })) throw new IOException("本机网关已关闭");
             String response = headers(guest.getInputStream());
             for (String line : response.split("\r\n")) {
                 if (line.regionMatches(true, 0, "Set-Cookie:", 0, 11)) line += "; Secure";
