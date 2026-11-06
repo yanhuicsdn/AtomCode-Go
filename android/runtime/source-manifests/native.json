@@ -1,0 +1,244 @@
+{
+  "schema": 1,
+  "kind": "pinned-termux-native-source-materials",
+  "consumer": "Separate native source reacquisition pins; not an input to the Ubuntu .dsc source_archives.py helper.",
+  "abi": "arm64-v8a",
+  "dependenciesSha256": "fd51913eb84c87b9e743ef0fc23cd29f2960fca9cb07fdb77eecb3165a28b9a4",
+  "completeCorrespondingSourceDelivered": false,
+  "signatureVerified": false,
+  "nativeBinaryRebuildPerformed": false,
+  "verificationScope": "Source SHA-256, exact-version recipe linkage and recorded Git blob consistency; no independent signature authentication, original binary-build attestation or complete product source claim.",
+  "archives": [
+    {
+      "id": "proot-source",
+      "role": "upstream-source",
+      "package": "proot",
+      "version": "5.1.107.102",
+      "name": "proot-v5.1.107.102.zip",
+      "url": "https://github.com/termux/proot/archive/v5.1.107.102.zip",
+      "finalURL": null,
+      "bytes": 552401,
+      "sha256": "30d12a6e2cc4147123756ff58edea262d3083bbc238c12d0ab9b39e3d1c40852",
+      "upstreamCommit": "52d65a4dc140ca554d241a1438ddd4f6b00c9813",
+      "acquisitionNote": "Verified existing cache reused; its historical final redirect URL was not recorded."
+    },
+    {
+      "id": "libtalloc-source",
+      "role": "upstream-source",
+      "package": "libtalloc",
+      "version": "2.5.0",
+      "name": "talloc-2.5.0.tar.gz",
+      "url": "https://www.samba.org/ftp/talloc/talloc-2.5.0.tar.gz",
+      "finalURL": "https://www.samba.org/ftp/talloc/talloc-2.5.0.tar.gz",
+      "bytes": 690172,
+      "sha256": "912afa237510ae542a7733998eb18a12bcda35ab6729c8e2ddb43e8d0ebab007"
+    },
+    {
+      "id": "libandroid-shmem-source",
+      "role": "upstream-source",
+      "package": "libandroid-shmem",
+      "version": "0.7",
+      "name": "libandroid-shmem-v0.7.tar.gz",
+      "url": "https://github.com/termux/libandroid-shmem/archive/refs/tags/v0.7.tar.gz",
+      "finalURL": "https://codeload.github.com/termux/libandroid-shmem/tar.gz/refs/tags/v0.7",
+      "bytes": 8891,
+      "sha256": "1e5ff8459bc0a8c229dd8a94b27d119987e09ef3414331c2b5ebfff20b98e867",
+      "upstreamCommit": "7f0bd7e25dbdd146265aff7c6a890029e374622d"
+    },
+    {
+      "id": "termux-packages-framework",
+      "role": "framework-tracked-snapshot",
+      "package": "termux-packages",
+      "version": "b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+      "commit": "b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+      "name": "termux-packages-b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9.tar.gz",
+      "url": "https://github.com/termux/termux-packages/archive/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9.tar.gz",
+      "finalURL": "https://codeload.github.com/termux/termux-packages/tar.gz/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+      "bytes": 9628066,
+      "sha256": "71a87144a42f47c3e5951e1cd4cdf5364730746127b1fccf9066c1b12d69f511"
+    }
+  ],
+  "binaryInputs": [
+    {
+      "package": "proot",
+      "version": "5.1.107.102",
+      "architecture": "aarch64",
+      "name": "proot_5.1.107.102_aarch64.deb",
+      "url": "https://packages.termux.dev/apt/termux-main/pool/main/p/proot/proot_5.1.107.102_aarch64.deb",
+      "bytes": 103028,
+      "sha256": "10a394b585c2fc2b2c8502544f4e5f1be581dc8bfff79e8ba62f16207423e030",
+      "sourceArchiveId": "proot-source",
+      "recipeDirectory": "packages/proot",
+      "recipeCommit": "b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+      "dependencyLicenseMetadata": "GPL-2.0",
+      "recipeLicenseMetadata": "GPL-2.0"
+    },
+    {
+      "package": "libtalloc",
+      "version": "2.5.0",
+      "architecture": "aarch64",
+      "name": "libtalloc_2.5.0_aarch64.deb",
+      "url": "https://packages.termux.dev/apt/termux-main/pool/main/libt/libtalloc/libtalloc_2.5.0_aarch64.deb",
+      "bytes": 34036,
+      "sha256": "556591f43bb773ad8777e1a29522640866a55f95dab71914418b94a8c58ad5a7",
+      "sourceArchiveId": "libtalloc-source",
+      "recipeDirectory": "packages/libtalloc",
+      "recipeCommit": "b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+      "dependencyLicenseMetadata": "LGPL-3.0-or-later",
+      "recipeLicenseMetadata": "GPL-3.0"
+    },
+    {
+      "package": "libandroid-shmem",
+      "version": "0.7",
+      "architecture": "aarch64",
+      "name": "libandroid-shmem_0.7_aarch64.deb",
+      "url": "https://packages.termux.dev/apt/termux-main/pool/main/liba/libandroid-shmem/libandroid-shmem_0.7_aarch64.deb",
+      "bytes": 7216,
+      "sha256": "0da3a24d558b93c92bcf8d611e0826a99ff96e396b148e6cdf33b47c47c57ff6",
+      "sourceArchiveId": "libandroid-shmem-source",
+      "recipeDirectory": "packages/libandroid-shmem",
+      "recipeCommit": "b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+      "dependencyLicenseMetadata": "BSD-3-Clause",
+      "recipeLicenseMetadata": "BSD 3-Clause"
+    }
+  ],
+  "framework": {
+    "repository": "termux/termux-packages",
+    "commit": "b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+    "archiveId": "termux-packages-framework",
+    "trackedBlobs": 10769,
+    "archiveGitExactBlobs": 10767,
+    "canonicalTrackedContentAvailable": true,
+    "canonicalFilesForArchiveEolConversions": [
+      {
+        "originalPath": "scripts/run-docker.ps1",
+        "url": "https://raw.githubusercontent.com/termux/termux-packages/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/scripts/run-docker.ps1",
+        "finalURL": "https://raw.githubusercontent.com/termux/termux-packages/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/scripts/run-docker.ps1",
+        "bytes": 950,
+        "sha256": "44b6ddc18aa6a48222182c78b40d06edca150944345b3dd10ac7bd9cf9b8ecdb",
+        "gitBlobSha1": "dcfd59c19f402edb0840809d8dda7ca6aa3c4948",
+        "archiveBytes": 981,
+        "archiveSha256": "5e2cbecc795f0e6ea9aefe77b0b4337ac84bb4cfcec58c6c2efa7bf2b3e9545a"
+      },
+      {
+        "originalPath": "scripts/update-docker.ps1",
+        "url": "https://raw.githubusercontent.com/termux/termux-packages/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/scripts/update-docker.ps1",
+        "finalURL": "https://raw.githubusercontent.com/termux/termux-packages/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/scripts/update-docker.ps1",
+        "bytes": 731,
+        "sha256": "06122c8d37f19e1cef53cde9b9dc248ef7b24aab7d0ca742b22330c9658c6f35",
+        "gitBlobSha1": "e0009fc994de560f3c768f928cf3a73d9a2085c7",
+        "archiveBytes": 752,
+        "archiveSha256": "ac060f76e622cfc9fcdd1f70f32043aa4b149d61a9bd05db8933e6906dd046a1"
+      }
+    ],
+    "gitlinks": 0,
+    "gitHistoryIncluded": false,
+    "toolchainsIncluded": false,
+    "selectedRecipeFiles": [
+      {
+        "package": "proot",
+        "originalPath": "packages/proot/build.sh",
+        "url": "https://raw.githubusercontent.com/termux/termux-packages/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/packages/proot/build.sh",
+        "commit": "b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+        "gitBlobSha1": "8b89ba5623c47bdf4fe5761d1b452852c4870e53",
+        "bytes": 1268,
+        "sha256": "d8fa15724e6f376d1b0f24802edb6fa3bd79bf91b0b662716e55eb285be620ab"
+      },
+      {
+        "package": "proot",
+        "originalPath": "packages/proot/termux-chroot",
+        "url": "https://raw.githubusercontent.com/termux/termux-packages/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/packages/proot/termux-chroot",
+        "commit": "b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+        "gitBlobSha1": "ce57067e01f6d6f53cb95ed7db789f7dabf10fe7",
+        "bytes": 3106,
+        "sha256": "71f5d77e680a029d0c053699b407bd4a45068153f1ec545eb1cd00b26dd36008"
+      },
+      {
+        "package": "libtalloc",
+        "originalPath": "packages/libtalloc/build.sh",
+        "url": "https://raw.githubusercontent.com/termux/termux-packages/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/packages/libtalloc/build.sh",
+        "commit": "b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+        "gitBlobSha1": "814cb06bc6a5052b84012ce2bb99e8c9cec84ee8",
+        "bytes": 2224,
+        "sha256": "b722c5adb89e4d4ad4595dbba40be562d9894103a190777392c363b57b1a7201"
+      },
+      {
+        "package": "libandroid-shmem",
+        "originalPath": "packages/libandroid-shmem/build.sh",
+        "url": "https://raw.githubusercontent.com/termux/termux-packages/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/packages/libandroid-shmem/build.sh",
+        "commit": "b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9",
+        "gitBlobSha1": "1b0cb64a2273491377dea61c6035dfa672b3fecf",
+        "bytes": 583,
+        "sha256": "0262fc1342aedf7d14e2b6a2932c33e0ebc9bd1f4a80533bd0f2400c6ef9ccf3"
+      }
+    ],
+    "selectedRecipeFileCount": 4,
+    "selectedPackagePatchFileCount": 0
+  },
+  "originalNoticePins": [
+    {
+      "package": "proot",
+      "sourceArchiveId": "proot-source",
+      "originalPath": "proot-5.1.107.102/COPYING",
+      "bytes": 19106,
+      "sha256": "0ffa6454acbe7e410ac6f0007df83b9b3161fe55484c1f4b87487c0f2d228a6d",
+      "role": "original-license"
+    },
+    {
+      "package": "libtalloc",
+      "sourceArchiveId": "libtalloc-source",
+      "originalPath": "talloc-2.5.0/LICENSE",
+      "bytes": 7651,
+      "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+      "role": "original-license"
+    },
+    {
+      "package": "libtalloc",
+      "sourceArchiveId": "libtalloc-source",
+      "originalPath": "talloc-2.5.0/talloc.h",
+      "bytes": 67322,
+      "sha256": "b6918a96dd37b9c3ea341fe2580d17784aa538a6fb2a5511a6d9d51058c7dc9f",
+      "role": "original-source-with-license-notice"
+    },
+    {
+      "package": "libandroid-shmem",
+      "sourceArchiveId": "libandroid-shmem-source",
+      "originalPath": "libandroid-shmem-0.7/LICENSE",
+      "bytes": 1529,
+      "sha256": "0dd43abe17196b0224cb0b159819af798cd508a82a21e5870126fff4e899a7eb",
+      "role": "original-license"
+    },
+    {
+      "package": "termux-packages",
+      "sourceArchiveId": "termux-packages-framework",
+      "originalPath": "termux-packages-b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/LICENSE.md",
+      "bytes": 565,
+      "sha256": "e86f899e394c692ce10dff53614f93ce473f02cddb4d88c5d49cb0c728ba5f68",
+      "role": "original-license"
+    }
+  ],
+  "licenseMetadataEvidence": {
+    "package": "libtalloc",
+    "recipeLabel": "GPL-3.0",
+    "dependencyLabel": "LGPL-3.0-or-later",
+    "upstreamLicensePath": "talloc-2.5.0/LICENSE",
+    "upstreamHeaderPath": "talloc-2.5.0/talloc.h",
+    "observedHeaderStatement": "LGPL version 3 or later applies to the talloc library.",
+    "scope": "Distinct recorded metadata and original-text evidence; no legal conclusion is inferred."
+  },
+  "acquisitionReceipt": {
+    "deliveryPath": "dist/android/native-source-archives/receipt-20261106T182110Z-73b525e0.json",
+    "sha256": "981ba5620cc169ef309ae92c6a2ec83a54c5204345c0a4128748b61b2defc467",
+    "tracked": false,
+    "checksumFile": "dist/android/native-source-archives/SHA256SUMS-20261106T182110Z-73b525e0",
+    "checksumEntries": 35,
+    "checksumFileItselfIncluded": false,
+    "nativeSourceArchiveBytes": 1251464,
+    "frameworkArchiveBytes": 9628066
+  },
+  "limitations": [
+    "This is a full tracked framework snapshot plus two canonical LF files, not a Git history or acquired compiler/container environment.",
+    "Matching source hashes and recipe versions does not prove that the original prebuilt Termux binaries were produced with that framework revision.",
+    "The three native source inputs and notices are only part of the complete product corresponding-source set."
+  ]
+}

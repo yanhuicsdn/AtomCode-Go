@@ -48,3 +48,13 @@ Current `webui/package-lock.json` SHA-256:
 ```
 
 After the pin update, WebUI build/typecheck and 402 tests passed; all 94 generated files had the same SHA-256 as before. This is WebUI output comparison, not a newly compiled APK. The offline `python3 android/runtime/verify_frontend_lock.py` preflight now accepts 178 pinned entries plus one bundled child. `build-local.sh` runs it before downloads or compilation. The real older `2ce` lock was rejected; a driver fixture confirmed that rejection created no venv and executed no build tools. Eight checker tests passed. These artifact pins and the source pilot do not change model availability or establish complete product source delivery.
+
+## Native dependency source materials
+
+[Native source pins](../../android/runtime/source-manifests/native.json) record four separately acquired archives: PRoot `5.1.107.102` (552,401 bytes), talloc `2.5.0` (690,172 bytes), libandroid-shmem `0.7` (8,891 bytes), and the Termux framework at commit `b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9` (9,628,066 bytes). The three upstream source archives total **1,251,464 bytes**. The manifest records URLs, byte counts, SHA-256 and the three pinned aarch64 binary-input versions/hashes. Its `pinned-termux-native-source-materials` kind is distinct from the Ubuntu `.dsc` format; `source_archives.py` does not fetch this manifest.
+
+The framework snapshot preserves all **10,769 tracked blobs**: 10,767 are Git-exact in the archive; two PowerShell files were exported as CRLF according to `.gitattributes`, and their fixed-commit original LF files are retained separately. The selected recipe directories contain four recipe/helper files, including `termux-chroot`, and no independent patch files. This includes the tracked framework source, not Git history or the compiler/container environment. Version/hash matching does not attest how the original prebuilt binaries were produced.
+
+Archives, original notices, metadata, the local ELF-modification implementation and `receipt-20261106T182110Z-73b525e0.json` are delivered under `dist/android/native-source-archives/`; these delivery files are not committed. The matching `SHA256SUMS-20261106T182110Z-73b525e0` contains **35 verification entries**, excluding the checksum file itself. The tracked manifest retains pins for reacquisition.
+
+The talloc recipe records `GPL-3.0`, the dependency metadata records `LGPL-3.0-or-later`, and the preserved upstream `LICENSE`/complete `talloc.h` provide distinct LGPL evidence. These observations do not infer a legal conclusion. Signatures were not independently authenticated, native binaries were not rebuilt, and complete corresponding source for the whole product remains incomplete.

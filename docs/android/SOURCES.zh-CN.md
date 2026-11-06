@@ -48,3 +48,13 @@ WebUI 锁已为此前缺失的 138 个独立条目补齐 `resolved` 和 SRI。�
 ```
 
 补 pin 后 WebUI 构建、类型检查和 402 项测试通过，94 个生成文件的 SHA-256 均与此前相同。这是 WebUI 输出比较，没有重新编译 APK。离线命令 `python3 android/runtime/verify_frontend_lock.py` 已验证 178 个带摘要条目和 1 个 bundled 子包；`build-local.sh` 在下载或编译前执行它。真实旧 `2ce` 锁被拒绝，driver 测试确认拒绝前没有创建 venv 或运行构建工具，8 项检查器测试通过。产物 pin 与源码试点不改变模型可用性，也不证明完整产品源码交付。
+
+## 原生依赖源码资料
+
+[原生源码 pin 清单](../../android/runtime/source-manifests/native.json) 登记四份独立取得的归档：PRoot `5.1.107.102`（552,401 字节）、talloc `2.5.0`（690,172 字节）、libandroid-shmem `0.7`（8,891 字节），以及固定在 commit `b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9` 的 Termux 框架（9,628,066 字节）。三个上游源码归档合计 **1,251,464 字节**。manifest 记录 URL、大小、SHA-256 和三个固定 aarch64 二进制输入的版本/摘要。其 `pinned-termux-native-source-materials` kind 与 Ubuntu `.dsc` 格式不同，`source_archives.py` 不负责获取这份清单。
+
+框架快照保留全部 **10,769 个 tracked blob**：归档内 10,767 个与 Git 原字节一致，两个 PowerShell 文件按 `.gitattributes` 导出为 CRLF，另行保留固定 commit 的原始 LF 文件。选定配方目录包含四个 recipe/helper 文件（含 `termux-chroot`），没有独立补丁文件。这覆盖框架的跟踪源码，不包含 Git 历史或编译器/容器环境；版本和摘要匹配也不证明原始预编译二进制的构建过程。
+
+归档、许可原文、元数据、本地 ELF 修改实现及 `receipt-20261106T182110Z-73b525e0.json` 通过 `dist/android/native-source-archives/` 交付，这些交付文件不提交 Git。对应 `SHA256SUMS-20261106T182110Z-73b525e0` 有 **35 个校验项**，不包含校验文件自身；跟踪的 manifest 保留可复取 pin。
+
+talloc 配方记录 `GPL-3.0`，依赖元数据记录 `LGPL-3.0-or-later`，保留的上游 `LICENSE` 和完整 `talloc.h` 则提供独立的 LGPL 原文证据。仅记录这些差异，不推导法律结论。签名尚未独立认证，原生二进制未重新编译，整个产品的完整对应源码仍未交付。
