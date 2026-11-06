@@ -7,12 +7,12 @@ Date: 2026-11-06. Status: development delivery; final acceptance has not been co
 The locally built AtomCode-Go 0.1.0 ARM64 debug APK has SHA-256:
 
 ```text
-149a762fd5483a688932a2c2634203edd9f728c85fb9e283999c23e1999f1067
+a2483445cde4fc4b6171f0da15413b5d8c2239edbeeac6df1c52de2e98fcdaf5
 ```
 
 Runtime: `atomcode-752a620892e947e2`. ARM64 Linux daemon SHA-256: `39393afd3622e7f32b39fd4d2cc254fb2d897fca6faa246c3075b382e29949da`.
 
-Android host source: `45268e090b581cad7540321e139b20bff6268c1a`. Bundled engine/WebUI build source: `a05c031ef27156cc733c0b144047ee562325f4d3`; later implementation changes affect the Android host and tests. Exact source/dependency identifiers are included in local `delivery.json` and `build-report.json`.
+Android host source: `1d66f07126d11eaa2102da6393300c62576efde7`. Bundled engine/WebUI build source: `a05c031ef27156cc733c0b144047ee562325f4d3`; later implementation changes affect the Android host and tests. Exact source/dependency identifiers are included in local `delivery.json` and `build-report.json`.
 
 Debug certificate SHA-256: `82923019b3fc796d3ed78d14561ab1d8ae966986e40a1936076ac6d795b02d41`. The signing key is not included in source or documentation.
 
@@ -42,8 +42,8 @@ The engine intentionally hides empty conversations in its normal history list. P
 - Daemon: 402 nextest tests passed, including private-socket shutdown/streaming and existing authentication tests.
 - Coding crate: all 1,245 nextest tests passed; 10 skipped. A stale assertion was corrected to accept Ollama’s public `local` placeholder while retaining host-credential isolation checks.
 - `bash gates/compile.sh` passed, covering workspace/all-targets, gated features and negative controls.
-- Runtime packaging: seven Python tests passed for traversal, links, corrupted hashes, hardlinks and deterministic ZIP output.
-- Android: five JVM tests passed; debug build and lint passed with zero errors and six localization/storage warnings.
+- Runtime packaging: 12 Python tests passed for traversal, links, corrupted hashes, hardlinks and deterministic ZIP output.
+- Android: 11 JVM tests passed; debug build and lint passed with zero errors and four localization/storage warnings.
 
 ## Real-model status
 
@@ -56,12 +56,12 @@ The user chose to defer compatible-provider configuration and receive the APK wi
 | Criterion | Evidence and outstanding work |
 | --- | --- |
 | 1 Reproducible delivery | Local build, lockfiles, hashes and ELF audit exist; clean-machine rebuild, production signing and complete corresponding-source/license distribution remain |
-| 2 Installation/startup | Android 14 device and Android 16 emulator fresh installation/start/stop passed; device low-space, corruption and interrupted-install cases remain |
+| 2 Installation/startup | Android 14 device and Android 16 emulator fresh installation/start/stop passed; isolated device tests pass callback cancellation, injected zero usable space, and installed-daemon corruption/repair; abrupt kills and physical storage exhaustion remain |
 | 3 On-device execution | Same-app-UID PRoot/daemon and real local commands/files observed; the emulator passed the complete local suite with Wi-Fi/mobile data disabled; physical-device offline scenarios remain |
 | 4 Authentication/security | Private socket, TLS pin, cookies, 401, incorrect pin and foreign-Origin rejection passed; full port-takeover, malicious-app, file-upload and backup tests remain |
 | 5 Core workflow | Real terminal, Git and file editing passed; configured real-model tools remain unaccepted because official signing support or a compatible API configuration is required |
-| 6 Persistence | Workspace and native session metadata survive restart; real conversation resume, interrupted upgrade, transfer UI and forced-kill recovery remain |
-| 7 Mobile usability | Real-device WebView works; updated naming/fullscreen/autostart and keyboard resizing passed on both devices; full orientation/long-content/file-picker coverage remains |
+| 6 Persistence | Workspace and native session metadata survive restart; real conversation resume, canceled repair and archive APIs passed on both devices; interrupted upgrades, transfer UI and forced-kill recovery remain |
+| 7 Mobile usability | Real-device WebView works; updated naming/fullscreen/autostart and keyboard resizing passed on both devices; focused rotation/long-text checks passed on the phone and twice on the emulator, but one initial emulator rotation failure remains unexplained; keyboard-plus-rotation and file-picker coverage remain |
 | 8 Lifecycle | Foreground notification and basic explicit stop/restart exercised; long background periods, forced stops and more vendors remain |
 | 9 Compatibility/network | Android 14 device and 16 emulator, both 4 KB; Android 8, additional vendors, 16 KB, IPv6/external HTTPS and sleep/network recovery remain |
 | 10 Evidence | Local automation and initial device evidence recorded; current artifact/source identifiers and remaining criteria are recorded; the full matrix remains incomplete |
@@ -71,3 +71,17 @@ The user chose to defer compatible-provider configuration and receive the APK wi
 The product name is **AtomCode-Go**. This APK fixes a rapid-restart race in which a retired foreground service stopped its replacement, and a gateway shutdown race that could dispatch connections into a stopped thread pool. Both devices were checked with the final APK.
 
 This is a local debug delivery. Real-model workflows, Android 8, more vendors, 16 KB devices and other outstanding matrix items have not passed final acceptance. GitHub defaults to English and GitCode to Chinese; both retain English/Chinese product, build, goal and verification documents. Source publication uses a CI-skipping commit; APKs are not committed and no remote compilation is requested.
+
+## Additional host validation
+
+The current APK rejects imports without a complete ZIP central directory and verifies file sizes/CRC before committing a project. ZIP input and expanded content are each bounded to 2 GB; temporary storage is needed for both. Two new regression cases fail against the previous importer and pass after the fix.
+
+Both devices passed six isolated storage checks using the actual bundled assets: installation, callback cancellation preserving the old pointer/home, injected zero-usable-space preflight, damaged installed-daemon detection/repair, archive roundtrip (UTF-8/empty directories/execute bit), and truncated/traversal import rejection. Tests use disposable cache roots, not the user's home. They do not establish physical disk exhaustion or abrupt-process-kill recovery.
+
+A missing/disabled WebView provider was tested only on the task's emulator. The app remained alive, displayed its native initialization-failure/upgrade diagnostic and contained no WebView node; the provider was restored. Minimum supported WebView syntax target is Chromium 99; old/unknown versions also have JVM coverage, not Android 8 device evidence.
+
+Five focused layout checks passed on the phone. An initial emulator landscape check failed without a detailed observation. Adding controlled diagnostics changed no pass condition; two subsequent emulator runs passed all five checks. The initial failure is retained as an unresolved intermittent observation, not silently discarded. Tests check recreation, the same runtime identity, composer visibility and temporary long-text scrolling; they do not establish persisted drafts or all keyboard/rotation combinations.
+
+The verified-input source inventory lists 117 Ubuntu binaries (82 source/version pairs) and three Termux native components. It correctly records overlaid versions instead of trusting stale Base dpkg status. Corresponding-source archives are still incomplete. Node build preflight now matches the locked tools at 22.12+. Rust engine sources, Cargo manifests/lock and Rust gates are unchanged from the previously verified baseline; this pass reran the affected Android/Python checks.
+
+Open host audit items: successful repairs retain older runtime generations without reclamation; readiness hashes the daemon, not every Linux file. Non-daemon corruption recovery still needs a dedicated reproduction and fix if confirmed.

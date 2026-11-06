@@ -72,3 +72,5 @@ Android 负责安装、进程生命周期和展示，AtomCode 保持 agent 与�
 - [GitCode 仓库](https://gitcode.com/superyan/AtomCode-Go)
 
 Android 宿主参考 dsh-Go 的架构独立实现，没有复制其代码或品牌素材。AtomCode 引擎及本仓库采用 [MIT 许可证](LICENSE)；分发的运行依赖保留各自许可证，包括 PRoot 的 GPL-2.0、talloc 的 LGPL-3.0-or-later。版本、摘要与源码地址记录在[运行环境依赖清单](android/runtime/dependencies.json)中。
+
+工作区要求 Android System WebView 99 或更新版本；组件缺失或不兼容时显示原生升级提示。其余系统和模型验收状态见验收记录。

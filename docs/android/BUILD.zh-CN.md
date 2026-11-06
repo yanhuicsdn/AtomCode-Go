@@ -82,3 +82,5 @@ adb -s DEVICE shell am instrument -w -e storage true \
 测试在新建缓存目录中使用真实内置运行环境，结束后删除该目录。覆盖回调取消和注入零可用空间，不能将结果当作强制杀进程或实际磁盘写满的验收证据。
 
 本地源码清单（`python android/runtime/source_inventory.py`）合并 Ubuntu Base 的包状态和经校验的额外 Debian 包控制元数据。当前内置环境有 117 个 Ubuntu 二进制包、82 组源码包/版本及 3 个 Termux 原生组件；`source-inventory.json` 记录对应源码获取页面并反映被覆盖的旧版本，但不等于完整对应源码交付。
+
+局部横竖屏/长文本检查：解锁设备后使用同一 instrumentation 命令加 `-e layout true`，不会发送模型请求。测试会恢复自身设置的方向和亮屏标志，并清理自己的 canary 文件。

@@ -93,3 +93,5 @@ adb -s DEVICE shell am instrument -w -e storage true \
 This uses bundled runtime assets in a new cache directory and removes that directory afterward. It tests callback cancellation and injected zero usable space, not an abrupt process kill or physical disk exhaustion.
 
 The local source inventory (`python android/runtime/source_inventory.py`) merges Ubuntu Base status with verified overlaid Debian control metadata. The current payload contains 117 Ubuntu binaries from 82 source/version pairs and three Termux natives. `source-inventory.json` records those source acquisition pages and replaces stale Base package versions; it is not the complete corresponding-source distribution.
+
+Focused rotation/long-text checks (unlocked device, no model calls): use the same instrumentation command with `-e layout true`. The helper restores its orientation/keep-screen settings and removes only its own canary.
