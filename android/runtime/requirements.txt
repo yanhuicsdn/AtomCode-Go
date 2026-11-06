@@ -1,0 +1,4 @@
+# Host-only tools. No Python dependency is installed into the Android host.
+cargo-zigbuild==0.24.1
+ziglang==0.13.0
+zstandard==0.23.0

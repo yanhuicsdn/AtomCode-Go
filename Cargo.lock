@@ -536,6 +536,7 @@ dependencies = [
  "axum",
  "ctor",
  "futures",
+ "hyper-util",
  "libc",
  "mime_guess",
  "portable-pty",

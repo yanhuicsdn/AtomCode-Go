@@ -542,7 +542,7 @@ test('maybeNotifyTurnFinished: creates a notification with mirrored title/body',
     const { instances } = installNotification('granted');
     maybeNotifyTurnFinished(makeInfo({ stopReason: 'natural', durationMs: 60_000 }));
     assert.equal(instances.length, 1);
-    assert.equal(instances[0].title, 'AtomCode done');
+    assert.equal(instances[0].title, 'AtomCode-Go done');
     assert.match(instances[0].options.body as string, /^Done · 60\.0s/);
     assert.equal(instances[0].options.tag, 'session-1');
     assert.equal(instances[0].options.icon, '/favicon.png');
@@ -552,12 +552,12 @@ test('maybeNotifyTurnFinished: creates a notification with mirrored title/body',
 test('maybeNotifyTurnFinished: title mapping for every stop reason', () => {
   withBrowserGlobals(() => {
     const cases: [string | undefined, string, string][] = [
-      ['natural', 'AtomCode done', /^Done/],
-      ['cancelled', 'AtomCode cancelled', /^Cancelled/],
-      ['error', 'AtomCode failed', /^Failed/],
-      ['turn_limit', 'AtomCode stopped', /^Stopped/],
-      ['step_limit', 'AtomCode stopped', /^Stopped/],
-      [undefined, 'AtomCode finished', /^Finished/],
+      ['natural', 'AtomCode-Go done', /^Done/],
+      ['cancelled', 'AtomCode-Go cancelled', /^Cancelled/],
+      ['error', 'AtomCode-Go failed', /^Failed/],
+      ['turn_limit', 'AtomCode-Go stopped', /^Stopped/],
+      ['step_limit', 'AtomCode-Go stopped', /^Stopped/],
+      [undefined, 'AtomCode-Go finished', /^Finished/],
     ];
     // 每个 case 用不同 sessionId：避免上一个 case 写入的 5s 去重记录拦截本 case。
     let i = 0;

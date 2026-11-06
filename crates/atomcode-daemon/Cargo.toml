@@ -89,3 +89,4 @@ windows-sys = { version = "0.61", features = ["Win32_System_Console"] }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
+hyper-util = { version = "0.1", features = ["server-auto", "service", "tokio"] }

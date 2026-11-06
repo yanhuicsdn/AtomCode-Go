@@ -1,0 +1,82 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'io.github.yanhuicsdn.atomcode'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'io.github.yanhuicsdn.atomcode'
+        minSdk 26
+        // As in dsh-Go: Linux guest executables live in app-private storage.
+        // API 29+ target execution policy prevents this. Sideload only.
+        targetSdk 28
+        versionCode 1
+        versionName '0.1.0'
+        testInstrumentationRunner 'io.github.yanhuicsdn.atomcode.LocalRuntimeSmoke'
+        ndk { abiFilters 'arm64-v8a' }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    sourceSets {
+        main {
+            assets.srcDir '../runtime/out/arm64-v8a/assets'
+            jniLibs.srcDir '../runtime/out/arm64-v8a/jniLibs'
+        }
+    }
+    packaging {
+        jniLibs {
+            useLegacyPackaging true
+            keepDebugSymbols += ['**/libproot.so', '**/libproot-loader.so', '**/libtalloc.so', '**/libandroid-shmem.so']
+        }
+    }
+    androidResources { noCompress += ['zip'] }
+    lint { disable 'ExpiredTargetSdkVersion' }
+    buildTypes {
+        release {
+            // No implicit debug-key release. Sign separately with a retained key.
+            minifyEnabled false
+        }
+    }
+    testOptions { unitTests.returnDefaultValues = true }
+}
+
+tasks.register('verifyRuntimePayload') {
+    doLast {
+        def manifest = file('../runtime/out/arm64-v8a/assets/runtime/manifest.json')
+        if (!manifest.isFile()) {
+            throw new GradleException('Missing runtime payload. Run python3 android/runtime/build.py from the repository root first.')
+        }
+        def runtime = new groovy.json.JsonSlurper().parse(manifest)
+        if (runtime.abi != 'arm64-v8a' || runtime.schema != 1) {
+            throw new GradleException('Unsupported runtime manifest')
+        }
+        def sha256 = { File input ->
+            def hash = java.security.MessageDigest.getInstance('SHA-256')
+            input.withInputStream { stream ->
+                byte[] buffer = new byte[65536]
+                int count
+                while ((count = stream.read(buffer)) != -1) hash.update(buffer, 0, count)
+            }
+            hash.digest().encodeHex().toString()
+        }
+        def rootfs = new File(manifest.parentFile, runtime.rootfs)
+        if (!rootfs.isFile() || sha256(rootfs) != runtime.rootfsSha256) {
+            throw new GradleException('Missing or corrupt rootfs payload')
+        }
+        runtime.nativeLibraries.each { name, entry ->
+            def library = file('../runtime/out/arm64-v8a/jniLibs/arm64-v8a/' + name)
+            if (!library.isFile() || sha256(library) != entry.sha256) {
+                throw new GradleException('Missing or corrupt native runtime library: ' + name)
+            }
+        }
+    }
+}
+tasks.named('preBuild').configure { dependsOn 'verifyRuntimePayload' }
+
+dependencies {
+    testImplementation 'junit:junit:4.13.2'
+}

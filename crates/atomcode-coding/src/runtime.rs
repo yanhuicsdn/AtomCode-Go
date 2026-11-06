@@ -14487,15 +14487,17 @@ mod tests {
         )
         .unwrap();
 
-        assert_eq!(
-            factory.provider_inputs.lock().unwrap().as_slice(),
-            [(
-                "judge".into(),
-                "https://judge.example/v1".into(),
-                String::new(),
-                Some("session-1".into())
-            )]
-        );
+        let inputs = factory.provider_inputs.lock().unwrap();
+        assert_eq!(inputs.len(), 1);
+        let (name, endpoint, key, session) = &inputs[0];
+        assert_eq!(name, "judge");
+        assert_eq!(endpoint, "https://judge.example/v1");
+        // Credential-less Ollama profiles resolve to the public "local"
+        // placeholder. Either empty or that placeholder is valid; inheriting
+        // the host credential (or any other secret) is not.
+        assert!(key.is_empty() || key == "local");
+        assert_ne!(key, "host-secret");
+        assert_eq!(session.as_deref(), Some("session-1"));
     }
 
     #[tokio::test]

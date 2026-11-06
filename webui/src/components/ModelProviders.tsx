@@ -262,6 +262,9 @@ export function ModelConfigDialog({ onClose }: { onClose: () => void }) {
                   {t('settings.loadFailed')}: {loadError}
                 </div>
               )}
+              {config?.official_model_signing_available === false && (
+                <div class="modal-error" role="status">{t('settings.officialModelUnavailable')}</div>
+              )}
               {actionError && (
                 <div class="modal-error" role="alert">
                   {actionError}

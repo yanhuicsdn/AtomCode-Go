@@ -59,6 +59,7 @@ pub(crate) fn config_response(config: &Config) -> ConfigResponse {
         })
         .collect();
     ConfigResponse {
+        official_model_signing_available: atomcode_capabilities::provider::signer_available(),
         path: Config::default_path(),
         default_provider: default_selection,
         default_workdir: config.default_workdir.clone(),

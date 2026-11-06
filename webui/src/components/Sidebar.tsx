@@ -1351,7 +1351,7 @@ export function Sidebar({
     <aside class={'session-list app-sidebar' + (open ? ' open' : '')}>
       <div class="sidebar-brand-row">
         <span class="sidebar-brand">
-<span class="sidebar-brand-name">AtomCode</span>
+<span class="sidebar-brand-name">AtomCode-Go</span>
         </span>
         <span class="sidebar-brand-btns">
           <button

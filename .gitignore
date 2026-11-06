@@ -133,3 +133,15 @@ extensions/jetbrains/.spec_docs
 
 # Codex 子代理在项目目录生成的运行时目录(external subagent driver)
 .codex/
+
+# Android local toolchains and generated runtime payloads
+/.tools/
+/android/.gradle/
+/android/local.properties
+/android/**/build/
+/android/runtime/out/
+/android/runtime/cache/
+/android/key.properties
+*.jks
+*.keystore
+!webui/package-lock.json

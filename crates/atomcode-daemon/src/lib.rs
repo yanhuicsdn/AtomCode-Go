@@ -173,6 +173,8 @@ pub(crate) struct ApiError {
 /// Sanitized config response (never exposes api_key).
 #[derive(Debug, Serialize)]
 pub(crate) struct ConfigResponse {
+    /// Capability of this actual binary, independent of OAuth login state.
+    pub official_model_signing_available: bool,
     pub path: PathBuf,
     pub default_provider: String,
     pub default_workdir: Option<String>,
@@ -6075,6 +6077,125 @@ async fn owner_stopped(mut receiver: watch::Receiver<bool>) {
     }
 }
 
+/// Private-socket host transport. Dropping connections on shutdown also closes
+/// streaming bodies; an SSE subscriber cannot keep a stopped host alive.
+#[cfg(unix)]
+async fn serve_unix_http(
+    listener: tokio::net::UnixListener,
+    app: axum::Router,
+    shutdown: watch::Receiver<bool>,
+    owner: Option<watch::Sender<bool>>,
+) -> std::io::Result<()> {
+    use hyper_util::{
+        rt::{TokioExecutor, TokioIo},
+        server::conn::auto::Builder,
+        service::TowerToHyperService,
+    };
+
+    let mut connections = tokio::task::JoinSet::new();
+    let stopped = shutdown_signal(shutdown);
+    tokio::pin!(stopped);
+    loop {
+        tokio::select! {
+            biased;
+            _ = &mut stopped => break,
+            accepted = listener.accept() => {
+                let (stream, _) = accepted?;
+                let app = app.clone();
+                connections.spawn(async move {
+                    let builder = Builder::new(TokioExecutor::new());
+                    // Current WebUI uses HTTP requests/SSE, including terminal
+                    // polling; retain upgrade support for standard API clients.
+                    if let Err(error) = builder.serve_connection_with_upgrades(
+                        TokioIo::new(stream), TowerToHyperService::new(app),
+                    ).await {
+                        tracing::debug!(%error, "private HTTP connection closed");
+                    }
+                });
+            }
+            _ = connections.join_next(), if !connections.is_empty() => {}
+        }
+    }
+    if let Some(owner) = owner {
+        owner.send_replace(true);
+    }
+    connections.abort_all();
+    while connections.join_next().await.is_some() {}
+    Ok(())
+}
+
+#[cfg(all(test, unix))]
+mod private_socket_tests {
+    use super::*;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+    #[tokio::test]
+    async fn private_socket_serves_http_and_shutdown_closes_a_streaming_body() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("daemon.sock");
+        let listener = tokio::net::UnixListener::bind(&path).unwrap();
+        let app = axum::Router::new().route(
+            "/stream",
+            axum::routing::get(|| async {
+                let stream =
+                    futures::stream::once(async { Ok::<_, std::io::Error>("data: ready\n\n") })
+                        .chain(futures::stream::pending());
+                axum::body::Body::from_stream(stream)
+            }),
+        );
+        let (shutdown, receiver) = watch::channel(false);
+        let (owner, owner_state) = watch::channel(false);
+        let server = tokio::spawn(serve_unix_http(listener, app, receiver, Some(owner)));
+        let mut client = tokio::net::UnixStream::connect(&path).await.unwrap();
+        client
+            .write_all(b"GET /stream HTTP/1.1\r\nHost: localhost\r\n\r\n")
+            .await
+            .unwrap();
+        let mut bytes = Vec::new();
+        let mut buffer = [0; 4096];
+        while !String::from_utf8_lossy(&bytes).contains("data: ready") {
+            let read = client.read(&mut buffer).await.unwrap();
+            assert_ne!(read, 0);
+            bytes.extend_from_slice(&buffer[..read]);
+        }
+        assert!(bytes.starts_with(b"HTTP/1.1 200"));
+        shutdown.send_replace(true);
+        server.await.unwrap().unwrap();
+        assert!(*owner_state.borrow());
+        // The stream never completes on its own: the host must close it.
+        assert_eq!(client.read(&mut buffer).await.unwrap(), 0);
+    }
+
+    #[tokio::test]
+    async fn private_socket_host_refuses_disabled_authentication_before_bootstrap() {
+        let directory = tempfile::tempdir().unwrap();
+        let listener =
+            tokio::net::UnixListener::bind(directory.path().join("private.sock")).unwrap();
+        let result = run_server_on_unix_socket(
+            ServerOpts {
+                host: "127.0.0.1".into(),
+                port: 12345,
+                cli_override: CliOverride { disabled: true },
+                idle_timeout_secs: 0,
+                startup_mode: SessionMode::Webui,
+                webui_tokens: None,
+                working_dir_override: None,
+                quiet: true,
+                prebound_listener: None,
+                owner_shutdown: None,
+                app_user_id: None,
+                daemon_token_file: None,
+            },
+            listener,
+        )
+        .await;
+        assert!(result
+            .unwrap_err()
+            .to_string()
+            .contains("requires authentication"));
+    }
+}
+
 async fn serve_http(
     listener: tokio::net::TcpListener,
     mut app: axum::Router,
@@ -7561,6 +7682,44 @@ fn daemon_bind_failure_message(addr: &str, port: u16, err: &std::io::Error) -> S
 }
 
 pub async fn run_server(opts: ServerOpts) -> anyhow::Result<()> {
+    run_server_with_transport(opts, None).await
+}
+
+enum ServerListener {
+    Tcp(tokio::net::TcpListener),
+    #[cfg(unix)]
+    Unix(tokio::net::UnixListener),
+}
+
+/// Android's host connects through a filesystem socket in app-private storage.
+/// It authenticates the presentation transport separately; the daemon keeps
+/// enforcing the existing API token and cookie contract. No TCP port is bound.
+/// The supplied port identifies the host's presentation origin/cookie scope.
+#[cfg(unix)]
+pub async fn run_server_on_unix_socket(
+    mut opts: ServerOpts,
+    listener: tokio::net::UnixListener,
+) -> anyhow::Result<()> {
+    anyhow::ensure!(
+        opts.webui_tokens.is_some(),
+        "Unix host transport requires authentication"
+    );
+    anyhow::ensure!(
+        opts.prebound_listener.is_none(),
+        "cannot combine TCP and Unix listeners"
+    );
+    anyhow::ensure!(
+        opts.host == "127.0.0.1" && opts.port != 0,
+        "Unix host transport requires a loopback presentation origin"
+    );
+    opts.daemon_token_file = None;
+    run_server_with_transport(opts, Some(ServerListener::Unix(listener))).await
+}
+
+async fn run_server_with_transport(
+    opts: ServerOpts,
+    transport: Option<ServerListener>,
+) -> anyhow::Result<()> {
     use axum::routing::patch;
 
     let ServerOpts {
@@ -8024,36 +8183,43 @@ pub async fn run_server(opts: ServerOpts) -> anyhow::Result<()> {
     // Step 9: Bind listener (R4.1 gate). 进程内 webui 已预先绑定并传入 listener
     // （拿到真实端口、支持动态端口），此处直接复用、跳过内部 bind；独立二进制
     // 走 bind 分支，bind 失败仍按 R4.4 发 OpenAtomcode 再退出。
-    let listener = match prebound_listener {
-        Some(l) => l,
-        None => match tokio::net::TcpListener::bind(&addr).await {
-            Ok(l) => l,
-            Err(e) => {
-                eprintln!("{}", daemon_bind_failure_message(&addr, port, &e));
-                // Step 12: On bind failure, still emit OpenAtomcode (R4.4) then exit
-                CurrentContext::scope(
-                    CurrentContext {
-                        mode: Some(startup_mode),
-                        repo_origin: Some(repo_origin.clone()),
-                        session_id: None,
-                        ..CurrentContext::default()
-                    },
-                    || async {
-                        telemetry.track(Event::OpenAtomcode {
-                            dangerously_skip_permissions: false,
-                        });
-                    },
-                )
-                .await;
-                telemetry.shutdown(Duration::from_millis(500)).await;
-                std::process::exit(1);
-            }
-        },
+    let listener = match transport {
+        Some(listener) => listener,
+        None => ServerListener::Tcp(match prebound_listener {
+            Some(l) => l,
+            None => match tokio::net::TcpListener::bind(&addr).await {
+                Ok(l) => l,
+                Err(e) => {
+                    eprintln!("{}", daemon_bind_failure_message(&addr, port, &e));
+                    // Step 12: On bind failure, still emit OpenAtomcode (R4.4) then exit
+                    CurrentContext::scope(
+                        CurrentContext {
+                            mode: Some(startup_mode),
+                            repo_origin: Some(repo_origin.clone()),
+                            session_id: None,
+                            ..CurrentContext::default()
+                        },
+                        || async {
+                            telemetry.track(Event::OpenAtomcode {
+                                dangerously_skip_permissions: false,
+                            });
+                        },
+                    )
+                    .await;
+                    telemetry.shutdown(Duration::from_millis(500)).await;
+                    std::process::exit(1);
+                }
+            },
+        }),
     };
 
     // 独立/IDE daemon：把本地 token 落到 `~/.atomcode/daemon-<port>.json`（0600），
     // 供 VSCode / JetBrains 读取并作为 Bearer 携带。进程内启动器传 None，不写。
-    let daemon_token_port = listener.local_addr().map(|a| a.port()).unwrap_or(port);
+    let daemon_token_port = match &listener {
+        ServerListener::Tcp(listener) => listener.local_addr().map(|a| a.port()).unwrap_or(port),
+        #[cfg(unix)]
+        ServerListener::Unix(_) => port,
+    };
     if let Some(ref token) = token_file_token {
         match daemon_token_file::write(daemon_token_port, std::process::id(), token) {
             Ok(p) => tracing::info!("daemon token file written: {}", p.display()),
@@ -8078,9 +8244,16 @@ pub async fn run_server(opts: ServerOpts) -> anyhow::Result<()> {
     .await;
 
     // Step 13: Serve with graceful shutdown (R10.1-R10.5)
-    serve_http(listener, app, shutdown_rx, owner_shutdown)
-        .await
-        .unwrap_or_else(|e| tracing::error!(?e, "axum::serve error"));
+    let result = match listener {
+        ServerListener::Tcp(listener) => {
+            serve_http(listener, app, shutdown_rx, owner_shutdown).await
+        }
+        #[cfg(unix)]
+        ServerListener::Unix(listener) => {
+            serve_unix_http(listener, app, shutdown_rx, owner_shutdown).await
+        }
+    };
+    result?;
 
     if token_file_token.is_some() {
         daemon_token_file::remove(daemon_token_port);

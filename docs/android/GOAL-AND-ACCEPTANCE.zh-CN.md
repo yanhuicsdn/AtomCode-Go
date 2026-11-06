@@ -1,6 +1,6 @@
-# AtomCode Android 最终目标与验收标准
+# AtomCode-Go 最终目标与验收标准
 
-状态：方案和验收基线，尚未实现或验收。基线为 AtomCode `c4a2fbfceb5ee99907d875d3b6ec604a495cc219`，参考 dsh-Go `cf2f7c861e1098661a3a2039b3a4cb1633790102`。实际交付时应记录新的源码、依赖和产物版本。
+状态：验收基线，实现进度和证据见 [验收记录](VERIFICATION.zh-CN.md)，不代表全部最终验收通过。引擎基线为 AtomCode `c4a2fbfceb5ee99907d875d3b6ec604a495cc219`，参考 dsh-Go `cf2f7c861e1098661a3a2039b3a4cb1633790102`。实际交付时应记录新的源码、依赖和产物版本。
 
 ## 最终目标
 

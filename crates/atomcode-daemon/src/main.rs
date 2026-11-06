@@ -178,7 +178,7 @@ async fn main() {
         );
     }
 
-    if let Err(e) = run_server(ServerOpts {
+    let opts = ServerOpts {
         host,
         port,
         cli_override,
@@ -195,10 +195,56 @@ async fn main() {
         // 独立 daemon 模式不需要 app user_id 校验。
         app_user_id: None,
         daemon_token_file,
-    })
-    .await
-    {
+    };
+
+    // Only the Android host asks for a private socket. Do not unlink an
+    // occupied path or silently fall back to TCP after any preparation error.
+    let result = async {
+        if let Some(path) = unix_socket_argument()? {
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                anyhow::ensure!(!no_auth, "--unix-socket cannot be combined with --no-auth");
+                let listener = tokio::net::UnixListener::bind(&path)?;
+                std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o600))?;
+                return atomcode_daemon::run_server_on_unix_socket(opts, listener).await;
+            }
+            #[cfg(not(unix))]
+            anyhow::bail!(
+                "--unix-socket is supported only on Unix hosts: {}",
+                path.display()
+            );
+        }
+        run_server(opts).await
+    }
+    .await;
+    if let Err(e) = result {
         eprintln!("Fatal: daemon server error: {e:#}");
         std::process::exit(1);
     }
+}
+
+fn unix_socket_argument() -> anyhow::Result<Option<std::path::PathBuf>> {
+    let mut args = std::env::args().skip(1);
+    let mut path = None;
+    while let Some(arg) = args.next() {
+        let value = if arg == "--unix-socket" {
+            Some(
+                args.next()
+                    .ok_or_else(|| anyhow::anyhow!("--unix-socket requires a path"))?,
+            )
+        } else {
+            arg.strip_prefix("--unix-socket=").map(str::to_owned)
+        };
+        if let Some(value) = value {
+            anyhow::ensure!(
+                !value.is_empty() && path.is_none(),
+                "--unix-socket requires one nonempty path"
+            );
+            let value = std::path::PathBuf::from(value);
+            anyhow::ensure!(value.is_absolute(), "--unix-socket path must be absolute");
+            path = Some(value);
+        }
+    }
+    Ok(path)
 }

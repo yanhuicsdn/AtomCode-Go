@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">AtomCode-Go</string>
+    <string name="runtime_running">AtomCode-Go 正在此手机上运行</string>
+</resources>

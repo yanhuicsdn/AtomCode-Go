@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "AtomCode",
-  "short_name": "AtomCode",
+  "name": "AtomCode-Go",
+  "short_name": "AtomCode-Go",
   "description": "AI coding agent running from your local AtomCode workspace.",
   "start_url": "./",
   "scope": "./",

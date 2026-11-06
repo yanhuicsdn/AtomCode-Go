@@ -1,0 +1,343 @@
+{
+  "schema": 1,
+  "abi": "arm64-v8a",
+  "reference": "ccch1mneyyy/dsh-Go@cf2f7c861e1098661a3a2039b3a4cb1633790102",
+  "note": "Versions and digests initially cross-referenced from the reference build manifest; every downloaded byte is independently checked. Ubuntu packages retain their copyright files. Source archive and Termux build-recipe provenance must accompany distribution.",
+  "inputs": [
+    {
+      "name": "ubuntu-base-24.04.5-base-arm64.tar.gz",
+      "url": "https://cdimage.ubuntu.com/ubuntu-base/releases/24.04/release/ubuntu-base-24.04.5-base-arm64.tar.gz",
+      "sha256": "a91d5a93010193712d346d761372b7c9db6dfcf093893161c64ca107f05914f2",
+      "license": "Ubuntu Base 24.04.5",
+      "source": "https://cdimage.ubuntu.com/ubuntu-base/releases/24.04/release/"
+    },
+    {
+      "name": "proot_5.1.107.102_aarch64.deb",
+      "url": "https://packages.termux.dev/apt/termux-main/pool/main/p/proot/proot_5.1.107.102_aarch64.deb",
+      "sha256": "10a394b585c2fc2b2c8502544f4e5f1be581dc8bfff79e8ba62f16207423e030",
+      "license": "GPL-2.0",
+      "source": "https://github.com/termux/proot/tree/v5.1.107.102",
+      "buildRecipe": "https://github.com/termux/termux-packages/tree/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/packages/proot"
+    },
+    {
+      "name": "libtalloc_2.5.0_aarch64.deb",
+      "url": "https://packages.termux.dev/apt/termux-main/pool/main/libt/libtalloc/libtalloc_2.5.0_aarch64.deb",
+      "sha256": "556591f43bb773ad8777e1a29522640866a55f95dab71914418b94a8c58ad5a7",
+      "license": "LGPL-3.0-or-later",
+      "source": "https://www.samba.org/ftp/talloc/talloc-2.5.0.tar.gz",
+      "buildRecipe": "https://github.com/termux/termux-packages/tree/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/packages/libtalloc"
+    },
+    {
+      "name": "libandroid-shmem_0.7_aarch64.deb",
+      "url": "https://packages.termux.dev/apt/termux-main/pool/main/liba/libandroid-shmem/libandroid-shmem_0.7_aarch64.deb",
+      "sha256": "0da3a24d558b93c92bcf8d611e0826a99ff96e396b148e6cdf33b47c47c57ff6",
+      "license": "BSD-3-Clause",
+      "source": "https://github.com/termux/libandroid-shmem/tree/v0.7",
+      "buildRecipe": "https://github.com/termux/termux-packages/tree/b734bc49dc0eedb2c454e1c5d3c48d35d81d4bc9/packages/libandroid-shmem"
+    },
+    {
+      "name": "proot-v5.1.107.102.zip",
+      "url": "https://github.com/termux/proot/archive/v5.1.107.102.zip",
+      "sha256": "30d12a6e2cc4147123756ff58edea262d3083bbc238c12d0ab9b39e3d1c40852",
+      "license": "GPL-2.0",
+      "source": "https://github.com/termux/proot/tree/v5.1.107.102"
+    },
+    {
+      "name": "ca-certificates_20260816ubuntu0.24.04.1_all.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/c/ca-certificates/ca-certificates_20260816ubuntu0.24.04.1_all.deb",
+      "sha256": "8a0a754aaafed72cc8efb8c1731808133284a84fbfc76a4fcc73fce9e01b4187",
+      "license": "See /usr/share/doc/ca-certificates/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/ca-certificates/20260816ubuntu0.24.04.1",
+      "package": "ca-certificates",
+      "version": "20260816ubuntu0.24.04.1",
+      "sourcePackage": "ca-certificates",
+      "sourceVersion": "20260816ubuntu0.24.04.1"
+    },
+    {
+      "name": "git_2.43.0-1ubuntu7.4_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/git/git_2.43.0-1ubuntu7.4_arm64.deb",
+      "sha256": "b46ef5ad7292f8ae69a7ec18c05e5b40f6c1fca837df2ce4b05b05bd46c9dc2b",
+      "license": "See /usr/share/doc/git/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/git/1%3A2.43.0-1ubuntu7.4",
+      "package": "git",
+      "version": "1:2.43.0-1ubuntu7.4",
+      "sourcePackage": "git",
+      "sourceVersion": "1:2.43.0-1ubuntu7.4"
+    },
+    {
+      "name": "git-man_2.43.0-1ubuntu7.4_all.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/git/git-man_2.43.0-1ubuntu7.4_all.deb",
+      "sha256": "77f57651734edc24b5a9e7863bc261bf302060ac3c12bbb08a459966ea4d30a6",
+      "license": "See /usr/share/doc/git-man/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/git/1%3A2.43.0-1ubuntu7.4",
+      "package": "git-man",
+      "version": "1:2.43.0-1ubuntu7.4",
+      "sourcePackage": "git",
+      "sourceVersion": "1:2.43.0-1ubuntu7.4"
+    },
+    {
+      "name": "libbrotli1_1.1.0-2build2_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/b/brotli/libbrotli1_1.1.0-2build2_arm64.deb",
+      "sha256": "cabf3462d908e72f2e594f19ae87c581c4614f099947e38fbd865bf8eae27014",
+      "license": "See /usr/share/doc/libbrotli1/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/brotli/1.1.0-2build2",
+      "package": "libbrotli1",
+      "version": "1.1.0-2build2",
+      "sourcePackage": "brotli",
+      "sourceVersion": "1.1.0-2build2"
+    },
+    {
+      "name": "libcurl3t64-gnutls_8.5.0-2ubuntu10.16_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/c/curl/libcurl3t64-gnutls_8.5.0-2ubuntu10.16_arm64.deb",
+      "sha256": "057490ffc9901df7fe09913e381442fc7615bb972a1dc4198e38bcf840447e77",
+      "license": "See /usr/share/doc/libcurl3t64-gnutls/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/curl/8.5.0-2ubuntu10.16",
+      "package": "libcurl3t64-gnutls",
+      "version": "8.5.0-2ubuntu10.16",
+      "sourcePackage": "curl",
+      "sourceVersion": "8.5.0-2ubuntu10.16"
+    },
+    {
+      "name": "liberror-perl_0.17029-2_all.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/libe/liberror-perl/liberror-perl_0.17029-2_all.deb",
+      "sha256": "1907af6bf33dd8684447c09f216c675d2b8559fadd8ddace29fbf83c6fb2a636",
+      "license": "See /usr/share/doc/liberror-perl/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/liberror-perl/0.17029-2",
+      "package": "liberror-perl",
+      "version": "0.17029-2",
+      "sourcePackage": "liberror-perl",
+      "sourceVersion": "0.17029-2"
+    },
+    {
+      "name": "libexpat1_2.6.1-2ubuntu0.6_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/e/expat/libexpat1_2.6.1-2ubuntu0.6_arm64.deb",
+      "sha256": "9782206e359ccd50dd5686c2fd5182ed87c777a6d76b0269e38e89dbaac9f3b2",
+      "license": "See /usr/share/doc/libexpat1/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/expat/2.6.1-2ubuntu0.6",
+      "package": "libexpat1",
+      "version": "2.6.1-2ubuntu0.6",
+      "sourcePackage": "expat",
+      "sourceVersion": "2.6.1-2ubuntu0.6"
+    },
+    {
+      "name": "libgdbm-compat4t64_1.23-5.1build1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/gdbm/libgdbm-compat4t64_1.23-5.1build1_arm64.deb",
+      "sha256": "e5788a4d0477e0b5bf5cad8950cbd591698828836818c180c20da6f86d68bd37",
+      "license": "See /usr/share/doc/libgdbm-compat4t64/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/gdbm/1.23-5.1build1",
+      "package": "libgdbm-compat4t64",
+      "version": "1.23-5.1build1",
+      "sourcePackage": "gdbm",
+      "sourceVersion": "1.23-5.1build1"
+    },
+    {
+      "name": "libgdbm6t64_1.23-5.1build1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/g/gdbm/libgdbm6t64_1.23-5.1build1_arm64.deb",
+      "sha256": "acc12af7e644ac336024c5d24028b20814fadd272588be30fb792982217e2dd4",
+      "license": "See /usr/share/doc/libgdbm6t64/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/gdbm/1.23-5.1build1",
+      "package": "libgdbm6t64",
+      "version": "1.23-5.1build1",
+      "sourcePackage": "gdbm",
+      "sourceVersion": "1.23-5.1build1"
+    },
+    {
+      "name": "libgssapi-krb5-2_1.20.1-6ubuntu2.10_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/k/krb5/libgssapi-krb5-2_1.20.1-6ubuntu2.10_arm64.deb",
+      "sha256": "7a13651d117e3b8f06139f4aac2184d4efaa8b5d375954b5229f0a332b3d6aeb",
+      "license": "See /usr/share/doc/libgssapi-krb5-2/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/krb5/1.20.1-6ubuntu2.10",
+      "package": "libgssapi-krb5-2",
+      "version": "1.20.1-6ubuntu2.10",
+      "sourcePackage": "krb5",
+      "sourceVersion": "1.20.1-6ubuntu2.10"
+    },
+    {
+      "name": "libk5crypto3_1.20.1-6ubuntu2.10_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/k/krb5/libk5crypto3_1.20.1-6ubuntu2.10_arm64.deb",
+      "sha256": "f05865643982afcec53b08c20e5e69be364f632dd63342009eec99f2ceb180c9",
+      "license": "See /usr/share/doc/libk5crypto3/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/krb5/1.20.1-6ubuntu2.10",
+      "package": "libk5crypto3",
+      "version": "1.20.1-6ubuntu2.10",
+      "sourcePackage": "krb5",
+      "sourceVersion": "1.20.1-6ubuntu2.10"
+    },
+    {
+      "name": "libkeyutils1_1.6.3-3build1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/k/keyutils/libkeyutils1_1.6.3-3build1_arm64.deb",
+      "sha256": "d141e94ed3b32ea6540f2e927a83b3d42cd4378256a1aad60cda583ffdbd78af",
+      "license": "See /usr/share/doc/libkeyutils1/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/keyutils/1.6.3-3build1",
+      "package": "libkeyutils1",
+      "version": "1.6.3-3build1",
+      "sourcePackage": "keyutils",
+      "sourceVersion": "1.6.3-3build1"
+    },
+    {
+      "name": "libkrb5-3_1.20.1-6ubuntu2.10_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/k/krb5/libkrb5-3_1.20.1-6ubuntu2.10_arm64.deb",
+      "sha256": "0ba099c96bfe18c168e0c12f92408c7a389566692db959be4afc88bd23466963",
+      "license": "See /usr/share/doc/libkrb5-3/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/krb5/1.20.1-6ubuntu2.10",
+      "package": "libkrb5-3",
+      "version": "1.20.1-6ubuntu2.10",
+      "sourcePackage": "krb5",
+      "sourceVersion": "1.20.1-6ubuntu2.10"
+    },
+    {
+      "name": "libkrb5support0_1.20.1-6ubuntu2.10_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/k/krb5/libkrb5support0_1.20.1-6ubuntu2.10_arm64.deb",
+      "sha256": "62d276c37b371c0d48de636d14f55d12f93aa18164ffe16d6fa66a81caeacf74",
+      "license": "See /usr/share/doc/libkrb5support0/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/krb5/1.20.1-6ubuntu2.10",
+      "package": "libkrb5support0",
+      "version": "1.20.1-6ubuntu2.10",
+      "sourcePackage": "krb5",
+      "sourceVersion": "1.20.1-6ubuntu2.10"
+    },
+    {
+      "name": "libldap2_2.6.10+dfsg-0ubuntu0.24.04.1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/o/openldap/libldap2_2.6.10+dfsg-0ubuntu0.24.04.1_arm64.deb",
+      "sha256": "60893ca2782c2e52dc3b7b192be0169228beb91f7c87e93abaeca5871c5f16ee",
+      "license": "See /usr/share/doc/libldap2/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/openldap/2.6.10%2Bdfsg-0ubuntu0.24.04.1",
+      "package": "libldap2",
+      "version": "2.6.10+dfsg-0ubuntu0.24.04.1",
+      "sourcePackage": "openldap",
+      "sourceVersion": "2.6.10+dfsg-0ubuntu0.24.04.1"
+    },
+    {
+      "name": "libnghttp2-14_1.59.0-1ubuntu0.4_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/n/nghttp2/libnghttp2-14_1.59.0-1ubuntu0.4_arm64.deb",
+      "sha256": "ec812e0b82dfb315b140020f4c8434191a89cf42c49dbb82605d0892b6783b59",
+      "license": "See /usr/share/doc/libnghttp2-14/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/nghttp2/1.59.0-1ubuntu0.4",
+      "package": "libnghttp2-14",
+      "version": "1.59.0-1ubuntu0.4",
+      "sourcePackage": "nghttp2",
+      "sourceVersion": "1.59.0-1ubuntu0.4"
+    },
+    {
+      "name": "libperl5.38t64_5.38.2-3.2ubuntu0.6_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/p/perl/libperl5.38t64_5.38.2-3.2ubuntu0.6_arm64.deb",
+      "sha256": "f9ef8a6909d0048cc4e4ce89c3c3ed010ba13e7932024d5744e38294e42b0925",
+      "license": "See /usr/share/doc/libperl5.38t64/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/perl/5.38.2-3.2ubuntu0.6",
+      "package": "libperl5.38t64",
+      "version": "5.38.2-3.2ubuntu0.6",
+      "sourcePackage": "perl",
+      "sourceVersion": "5.38.2-3.2ubuntu0.6"
+    },
+    {
+      "name": "libpsl5t64_0.21.2-1.1build1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/libp/libpsl/libpsl5t64_0.21.2-1.1build1_arm64.deb",
+      "sha256": "886d485c74567b855bcd19b6f353a769a08b58c111b2d8275a908a469c15d4bf",
+      "license": "See /usr/share/doc/libpsl5t64/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/libpsl/0.21.2-1.1build1",
+      "package": "libpsl5t64",
+      "version": "0.21.2-1.1build1",
+      "sourcePackage": "libpsl",
+      "sourceVersion": "0.21.2-1.1build1"
+    },
+    {
+      "name": "librtmp1_2.4+20151223.gitfa8646d.1-2build7_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/r/rtmpdump/librtmp1_2.4+20151223.gitfa8646d.1-2build7_arm64.deb",
+      "sha256": "fb771b2743120d9d44ee9989fd485205680976f7bf89f2f1ac5df50238ea1db7",
+      "license": "See /usr/share/doc/librtmp1/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/rtmpdump/2.4%2B20151223.gitfa8646d.1-2build7",
+      "package": "librtmp1",
+      "version": "2.4+20151223.gitfa8646d.1-2build7",
+      "sourcePackage": "rtmpdump",
+      "sourceVersion": "2.4+20151223.gitfa8646d.1-2build7"
+    },
+    {
+      "name": "libsasl2-2_2.1.28+dfsg1-5ubuntu3.1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/c/cyrus-sasl2/libsasl2-2_2.1.28+dfsg1-5ubuntu3.1_arm64.deb",
+      "sha256": "05da24adf2b95285ce7eaf9a2ea902fbf4f756a796c8adbfd221d746035df44b",
+      "license": "See /usr/share/doc/libsasl2-2/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/cyrus-sasl2/2.1.28%2Bdfsg1-5ubuntu3.1",
+      "package": "libsasl2-2",
+      "version": "2.1.28+dfsg1-5ubuntu3.1",
+      "sourcePackage": "cyrus-sasl2",
+      "sourceVersion": "2.1.28+dfsg1-5ubuntu3.1"
+    },
+    {
+      "name": "libsasl2-modules-db_2.1.28+dfsg1-5ubuntu3.1_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/c/cyrus-sasl2/libsasl2-modules-db_2.1.28+dfsg1-5ubuntu3.1_arm64.deb",
+      "sha256": "ee8237dfd0d26df4d5fbfd3a9b132ae9f34f05b4508176b8bd1839f12739d94c",
+      "license": "See /usr/share/doc/libsasl2-modules-db/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/cyrus-sasl2/2.1.28%2Bdfsg1-5ubuntu3.1",
+      "package": "libsasl2-modules-db",
+      "version": "2.1.28+dfsg1-5ubuntu3.1",
+      "sourcePackage": "cyrus-sasl2",
+      "sourceVersion": "2.1.28+dfsg1-5ubuntu3.1"
+    },
+    {
+      "name": "libssh-4_0.10.6-2ubuntu0.5_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/libs/libssh/libssh-4_0.10.6-2ubuntu0.5_arm64.deb",
+      "sha256": "f1b8da917a3d65ca77918027206b55b69d62795df2676c39828d4439bc97e68f",
+      "license": "See /usr/share/doc/libssh-4/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/libssh/0.10.6-2ubuntu0.5",
+      "package": "libssh-4",
+      "version": "0.10.6-2ubuntu0.5",
+      "sourcePackage": "libssh",
+      "sourceVersion": "0.10.6-2ubuntu0.5"
+    },
+    {
+      "name": "openssl_3.0.13-0ubuntu3.16_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/o/openssl/openssl_3.0.13-0ubuntu3.16_arm64.deb",
+      "sha256": "07fa666e2dfe758e5c4e19ccc695a19e8a56fb512fa55bd7de89219a1e65d372",
+      "license": "See /usr/share/doc/openssl/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/openssl/3.0.13-0ubuntu3.16",
+      "package": "openssl",
+      "version": "3.0.13-0ubuntu3.16",
+      "sourcePackage": "openssl",
+      "sourceVersion": "3.0.13-0ubuntu3.16"
+    },
+    {
+      "name": "perl_5.38.2-3.2ubuntu0.6_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/p/perl/perl_5.38.2-3.2ubuntu0.6_arm64.deb",
+      "sha256": "c8997d0e440f8f220981e25af1f63d1ab6a86afba770218a240cd5f385585aee",
+      "license": "See /usr/share/doc/perl/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/perl/5.38.2-3.2ubuntu0.6",
+      "package": "perl",
+      "version": "5.38.2-3.2ubuntu0.6",
+      "sourcePackage": "perl",
+      "sourceVersion": "5.38.2-3.2ubuntu0.6"
+    },
+    {
+      "name": "perl-base_5.38.2-3.2ubuntu0.6_arm64.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/p/perl/perl-base_5.38.2-3.2ubuntu0.6_arm64.deb",
+      "sha256": "52ff69555911c8ef4350a80b12bbdc823b6c096cb15eb39c540cd84e6c726cc0",
+      "license": "See /usr/share/doc/perl-base/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/perl/5.38.2-3.2ubuntu0.6",
+      "package": "perl-base",
+      "version": "5.38.2-3.2ubuntu0.6",
+      "sourcePackage": "perl",
+      "sourceVersion": "5.38.2-3.2ubuntu0.6"
+    },
+    {
+      "name": "perl-modules-5.38_5.38.2-3.2ubuntu0.6_all.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/p/perl/perl-modules-5.38_5.38.2-3.2ubuntu0.6_all.deb",
+      "sha256": "9c4c90145209d4f85be9255417008e8decb9cd5d189f446fd39ad096e31199cf",
+      "license": "See /usr/share/doc/perl-modules-5.38/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/perl/5.38.2-3.2ubuntu0.6",
+      "package": "perl-modules-5.38",
+      "version": "5.38.2-3.2ubuntu0.6",
+      "sourcePackage": "perl",
+      "sourceVersion": "5.38.2-3.2ubuntu0.6"
+    },
+    {
+      "name": "tzdata_2026e-0ubuntu0.24.04.1_all.deb",
+      "url": "https://ports.ubuntu.com/ubuntu-ports/pool/main/t/tzdata/tzdata_2026e-0ubuntu0.24.04.1_all.deb",
+      "sha256": "2f6794a7f31753fc947d9ac02ff03ea46510f34864f9d132a93d7b105e3c4447",
+      "license": "See /usr/share/doc/tzdata/copyright",
+      "source": "https://launchpad.net/ubuntu/+source/tzdata/2026e-0ubuntu0.24.04.1",
+      "package": "tzdata",
+      "version": "2026e-0ubuntu0.24.04.1",
+      "sourcePackage": "tzdata",
+      "sourceVersion": "2026e-0ubuntu0.24.04.1"
+    }
+  ]
+}

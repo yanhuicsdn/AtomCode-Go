@@ -586,6 +586,7 @@ export interface NotificationConfigInfo {
 }
 
 export interface ConfigInfo {
+  official_model_signing_available?: boolean;
   path: string;
   default_provider: string;
   default_workdir?: string;

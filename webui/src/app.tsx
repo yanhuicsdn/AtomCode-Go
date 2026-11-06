@@ -185,6 +185,10 @@ export function App() {
       .then((cfg) => {
         if (cancelled) return;
         applyConfigDefaults(cfg.notifications);
+        if (cfg.official_model_signing_available === false &&
+            cfg.providers.some((provider) => provider.is_default && provider.requires_login)) {
+          setSettingsSection((current) => current ?? 'model');
+        }
       })
       .catch(() => {
         /* 配置不可用时继续使用前端默认值 */

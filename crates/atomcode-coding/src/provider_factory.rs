@@ -21,15 +21,32 @@ impl std::fmt::Display for ProviderBuildError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Adapter(message) | Self::Authentication(message) => f.write_str(message),
-            Self::SourceBuildGatewayUnsupported { base_url } => write!(
-                f,
-                "gateway authentication is unavailable in this build: {base_url}"
+            Self::SourceBuildGatewayUnsupported { .. } => f.write_str(
+                "This source build has no official CodingPlan request signer. AtomGit login does not enable official models. Configure your own compatible model API, or use an official build that includes the signer.",
             ),
         }
     }
 }
 
 impl std::error::Error for ProviderBuildError {}
+
+#[cfg(test)]
+mod source_build_help_tests {
+    use super::ProviderBuildError;
+
+    #[test]
+    fn unsupported_official_models_explain_the_missing_capability_without_echoing_endpoints() {
+        let error = ProviderBuildError::SourceBuildGatewayUnsupported {
+            base_url: "https://gateway.invalid/v1?secret=do-not-echo".into(),
+        }
+        .to_string();
+        assert!(error.contains("signer"));
+        assert!(error.contains("AtomGit login does not enable"));
+        assert!(error.contains("own compatible model API"));
+        assert!(!error.contains("do-not-echo"));
+        assert!(!error.contains("gateway.invalid"));
+    }
+}
 
 /// Host seam for endpoint-specific request authentication. Returning `None` means the endpoint
 /// uses the configured static API key. The implementation owns gateway identification as well as

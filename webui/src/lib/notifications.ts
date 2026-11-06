@@ -231,16 +231,16 @@ function fmtDuration(ms: number): string {
 function titleForStopReason(stopReason?: string): string {
   switch (stopReason) {
     case 'natural':
-      return 'AtomCode done';
+      return 'AtomCode-Go done';
     case 'cancelled':
-      return 'AtomCode cancelled';
+      return 'AtomCode-Go cancelled';
     case 'error':
-      return 'AtomCode failed';
+      return 'AtomCode-Go failed';
     case 'turn_limit':
     case 'step_limit':
-      return 'AtomCode stopped';
+      return 'AtomCode-Go stopped';
     default:
-      return 'AtomCode finished';
+      return 'AtomCode-Go finished';
   }
 }
 

@@ -28,7 +28,7 @@ test('webui advertises an installable standalone app manifest', () => {
   );
 
   assert.equal(manifest.id, '/');
-  assert.equal(manifest.name, 'AtomCode');
+  assert.equal(manifest.name, 'AtomCode-Go');
   assert.equal(new URL(manifest.start_url, 'https://relay.example/webui/manifest.webmanifest').pathname, '/webui/');
   assert.equal(new URL(manifest.start_url, 'http://localhost/manifest.webmanifest').pathname, '/');
   assert.equal(manifest.scope, './');
