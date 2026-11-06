@@ -209,7 +209,14 @@ def main():
         canary_path = directory + "/keep.bin"
         device.call("shell", "-T", "run-as", OWNER, "/system/bin/toybox", "mkdir", directory)
         canary = ("Upgrade interruption test canary, not credentials: " + uuid.uuid4().hex + "\n").encode("ascii")
-        device.call("exec-in", "run-as", OWNER, "/system/bin/toybox", "dd", "of=" + canary_path, data=canary)
+        write = device.call("shell", "-T", "run-as", OWNER, "/system/bin/toybox", "dd", "of=" + canary_path,
+                            data=canary, check=False)
+        report["canaryWrite"] = {"transport": "shell-v2-no-pty", "remoteExit": write.returncode,
+                                 "stdoutBytes": len(write.stdout), "stderrBytes": len(write.stderr)}
+        require(write.returncode == 0, "canary-write-command-failed")
+        canary_info = device.stat(canary_path)
+        require(canary_info["type"] == "regular file" and canary_info["bytes"] == len(canary),
+                "canary-write-size-not-verified")
         canary_hash = hashlib.sha256(canary).hexdigest()
         require(device.digest(canary_path) == canary_hash, "canary-write-not-verified")
         report["canary"] = {"relativePath": canary_path, "bytes": len(canary), "sha256": canary_hash,
